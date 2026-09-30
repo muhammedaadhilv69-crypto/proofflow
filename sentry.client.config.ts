@@ -1,6 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 
-const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN ?? process.env.SENTRY_DSN;
+// Only NEXT_PUBLIC_* variables are inlined into the browser bundle, so the
+// client needs its own DSN. SENTRY_DSN is server-only and is silently replaced
+// with undefined here, which would leave browser errors unreported.
+const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
 Sentry.init({
   dsn,
