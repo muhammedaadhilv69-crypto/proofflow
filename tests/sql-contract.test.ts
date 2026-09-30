@@ -13,6 +13,55 @@ function hardeningSql() {
   return hardeningSqlPromise;
 }
 
+let rateLimitSqlPromise: Promise<string> | undefined;
+/**
+ * The migration that last redefines `consume_rate_limit`. 004 replaces the
+ * function, so asserting against 003 alone would test a definition the
+ * database no longer runs. Returned whole, because the DDL the function relies
+ * on (the new column) sits alongside it in the same file.
+ */
+function effectiveRateLimitSql() {
+  rateLimitSqlPromise ??= (async () => {
+    let body = "";
+    for (const file of [
+      "src/db/sql/003_production_hardening.sql",
+      "src/db/sql/004_rate_limit_window.sql",
+    ]) {
+      const sql = await readFile(file, "utf8");
+      if (sql.includes("create or replace function public.consume_rate_limit")) {
+        body = sql;
+      }
+    }
+    return body;
+  })();
+  return rateLimitSqlPromise;
+}
+
+test("a bucket expires against its own window, not a flat hour", async () => {
+  // Regression: 003 swept on `window_started_at < now() - interval '1 hour'`.
+  // That was safe while every window was 15 minutes or 1 hour, but the
+  // per-account auth limit is a 24 hour window, so its bucket was deleted about
+  // an hour in and the ceiling silently became roughly 30 per hour.
+  const sql = await effectiveRateLimitSql();
+
+  assert.match(
+    sql,
+    /alter table public\.rate_limit_buckets\s*add column if not exists window_seconds integer not null default 3600/,
+  );
+  assert.match(
+    sql,
+    /where window_started_at < now\(\) - make_interval\(secs => coalesce\(window_seconds, 3600\)\)/,
+  );
+  assert.doesNotMatch(
+    sql,
+    /where window_started_at < now\(\) - interval '1 hour'/,
+    "a flat hour cannot expire a 24 hour bucket",
+  );
+  // The window has to be recorded on the row, not just on the call.
+  assert.match(sql, /values \(p_key, now\(\), 1, p_window_seconds\)/);
+  assert.match(sql, /window_seconds = case/);
+});
+
 test("rate limiting is backed by a durable table, not process memory", async () => {
   const sql = await hardeningSql();
   assert.match(

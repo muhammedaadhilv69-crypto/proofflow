@@ -11,7 +11,7 @@ export function isSameOrigin(request: Request) {
   }
 }
 
-export type ReviewGuard = { ok: true; ip: string } | { ok: false; response: NextResponse }
+export type ReviewGuard = { ok: true; ip: string | null } | { ok: false; response: NextResponse }
 
 /**
  * Shared preflight for the public review-token endpoints.

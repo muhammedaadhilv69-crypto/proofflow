@@ -14,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ rev
   const admin = createAdminClient()
   const { data, error } = await admin.rpc("approve_version", {
     p_token: reviewToken,
-    p_ip_address: guard.ip === "unknown" ? undefined : guard.ip,
+    p_ip_address: guard.ip ?? undefined,
     p_user_agent: requestUserAgent(request),
   })
   if (error) return NextResponse.json({ error: error.message }, { status: 409 })

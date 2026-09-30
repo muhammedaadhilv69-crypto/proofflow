@@ -11,6 +11,15 @@ Sentry.init({
   beforeSend(event) {
     return scrubEvent(event);
   },
+  beforeBreadcrumb(breadcrumb) {
+    // scrubEvent only rewrites the event, never the breadcrumbs attached to it,
+    // and the default console integration records every argument verbatim. A
+    // server log that accidentally carries a token or an address would
+    // otherwise leave the process through the breadcrumb trail. They add
+    // nothing here that the runtime log does not already hold.
+    if (breadcrumb.category === "console") return null;
+    return breadcrumb;
+  },
 });
 
 /**

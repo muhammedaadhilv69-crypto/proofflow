@@ -22,7 +22,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ rev
     p_token: reviewToken,
     p_body: parsed.data.body,
     p_change_request: false,
-    p_ip_address: guard.ip === "unknown" ? undefined : guard.ip,
+    p_ip_address: guard.ip ?? undefined,
     p_user_agent: requestUserAgent(request),
   })
   if (error) return NextResponse.json({ error: error.message }, { status: 409 })

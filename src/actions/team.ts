@@ -12,6 +12,7 @@ import {
   checkRateLimit,
   clientIpFromHeaders,
   decide,
+  fromRequest,
 } from "@/lib/rate-limit";
 import {
   acceptInvitation,
@@ -58,13 +59,25 @@ export async function inviteMemberAction(
     return failure("You are already a member of this workspace");
 
   const ip = clientIpFromHeaders(await headers());
-  const decision = await checkRateLimit(
-    buildRateLimitKey("team", "invite", ip),
-    20,
-    60 * 60_000,
-  );
-  if (!decide(decision))
-    return failure("Too many invitations sent. Try again later.");
+  // An unresolvable address is not bucketed at all: a per-address limit is
+  // meaningless without an address, and a placeholder would be one shared
+  // ceiling any single owner could exhaust on everyone else's behalf. The owner
+  // check above is the real control.
+  if (ip !== null) {
+    const decision = await checkRateLimit(
+      buildRateLimitKey("team", "invite", fromRequest(ip)),
+      20,
+      60 * 60_000,
+    );
+    // Distinguished from a real quota because the limiter being down is an
+    // operator problem, and telling the caller they sent too many invitations
+    // sends them to debug the wrong thing during exactly the incident where the
+    // database is already broken.
+    if (decision === "unavailable")
+      return failure("Invitations are temporarily unavailable. Try again shortly.");
+    if (!decide(decision))
+      return failure("Too many invitations sent. Try again later.");
+  }
 
   const created = await createInvitation(context, parsed.data.email);
   if (!created.ok) return failure(created.error);

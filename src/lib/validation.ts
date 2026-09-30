@@ -15,7 +15,9 @@ export const signupSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().trim().email("Enter a valid email address"),
+  // Bounded like every other email schema here. Without a cap the address runs
+  // through normalisation and hashing in full on every rejected login.
+  email: z.string().trim().email("Enter a valid email address").max(254),
   password: z.string().min(1, "Enter your password"),
 });
 

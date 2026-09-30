@@ -14,6 +14,7 @@ import {
   checkRateLimit,
   clientIpFromHeaders,
   decideForAuth,
+  fromRequest,
 } from "@/lib/rate-limit";
 
 const MINUTE = 60_000;
@@ -50,21 +51,29 @@ async function callerIp() {
 async function limitAuthAttempt(
   scope: string,
   identity: string,
-  ip: string,
+  ip: string | null,
 ): Promise<boolean> {
-  const burst = await checkRateLimit(
-    buildRateLimitKey("auth", scope, "burst", ip),
-    20,
-    15 * MINUTE,
-  );
-  if (!decideForAuth(burst)) return false;
+  // No valid address means no per-address burst, rather than a placeholder
+  // bucket that every unidentified caller shares and any one of them could
+  // exhaust. The per-account limit below still applies.
+  if (ip !== null) {
+    const burst = await checkRateLimit(
+      buildRateLimitKey("auth", scope, "burst", fromRequest(ip)),
+      20,
+      15 * MINUTE,
+    );
+    if (!decideForAuth(burst)) return false;
+  }
 
-  if (!identity.trim()) return true;
+  // Every caller must supply a real credential to key the sustained limit by.
+  // Returning true here instead would skip the only ceiling that survives
+  // address rotation, silently, for every account whose identity is missing.
+  if (!identity.trim()) return false;
 
-  // Hashed by buildRateLimitKey, so the account address is never written to
+  // Hashed by fromRequest, so the account address is never written to
   // rate_limit_buckets while per-account limits still apply.
   const sustained = await checkRateLimit(
-    buildRateLimitKey("auth", scope, "account", identity),
+    buildRateLimitKey("auth", scope, "account", fromRequest(identity)),
     30,
     DAY,
   );
@@ -166,6 +175,10 @@ export async function forgotPassword(
 ): Promise<AuthActionResult> {
   const email = formString(formData, "email").trim();
   if (!email) return authFailure("Email is required");
+  // Deliberately not format-checked: this form always reports success so it
+  // cannot be used to enumerate accounts. Only the length is bounded, so the
+  // address cannot be used to make the limiter hash an arbitrarily large body.
+  if (email.length > 254) return authFailure("Email is too long");
 
   const ip = await callerIp();
   if (!(await limitAuthAttempt("forgot-password", email, ip)))
@@ -212,7 +225,11 @@ export async function resetPassword(
     return authFailure("This reset link is invalid or expired");
 
   const ip = await callerIp();
-  if (!(await limitAuthAttempt("reset-password", userData.user.email || "", ip)))
+  // A phone-only or provider-omitted account has no address on the auth record.
+  // Keying the sustained limit by the user id keeps that account covered rather
+  // than leaving it with only the per-address burst.
+  const identity = userData.user.email || userData.user.id;
+  if (!(await limitAuthAttempt("reset-password", identity, ip)))
     return authFailure("Too many attempts. Try again later.");
 
   const { error } = await supabase.auth.updateUser({ password });

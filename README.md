@@ -13,8 +13,8 @@ ProofFlow is a client approval workspace built around one invariant: the client 
 ## Local setup
 
 1. Use Node.js 20.9 or newer.
-2. Copy `.env.example` to `.env.local` and set the Supabase URL, anon key, service-role key, and app URL.
-3. Run the migrations in `src/db/sql/` in order in the Supabase SQL editor. `001` creates the schema, `002` adds RLS, triggers, and the workflow functions, and `003` adds rate-limit buckets, workspace invitations, and review-open deduplication. `003` is required: the app calls `consume_rate_limit` on every request, and rate limiting fails closed.
+2. Copy `.env.example` to `.env.local` and set the Supabase URL, anon key, service-role key, and app URL. Set `RATE_LIMIT_KEY_SECRET` to a stable random value (`openssl rand -hex 32`) and keep it identical on every instance.
+3. Run the migrations in `src/db/sql/` in order in the Supabase SQL editor. `001` creates the schema, `002` adds RLS, triggers, and the workflow functions, `003` adds rate-limit buckets, workspace invitations, and review-open deduplication, and `004` gives each rate-limit bucket its own expiry window. `003` and `004` are both required: the app calls `consume_rate_limit` on every request, and rate limiting fails closed.
 4. In Supabase Auth, add your app URL and `${NEXT_PUBLIC_APP_URL}/reset-password` to the redirect URL allowlist.
 5. Install dependencies and start the app:
 
@@ -33,7 +33,9 @@ The service-role key is used only by server modules and must never be exposed to
 
 `NEXT_PUBLIC_APP_URL` must be an absolute `https` URL in production. `requireAppUrl()` throws if it is missing, non-absolute, not https, or points at localhost, because every client-facing link is built from it. The non-throwing `getAppUrl()` is used only for `robots.txt` and `sitemap.xml`, which must not break the build.
 
-Rate limiting lives in Postgres (`public.consume_rate_limit`) rather than process memory, so limits are shared across instances and survive cold starts. It fails closed: if the database is unreachable the request is rejected rather than passing through an absent guard.
+Rate limiting lives in Postgres (`public.consume_rate_limit`) rather than process memory, so limits are shared across instances and survive cold starts. It fails closed: if the database is unreachable the request is rejected rather than passing through an absent guard. Each bucket records its own window, so a 24 hour per-account limit is not expired by the 1 hour sweep.
+
+Keys are built only by `buildRateLimitKey()`. Values that arrived on the wire — account addresses, client addresses, review tokens — go through `fromRequest()` and are HMAC'd with `RATE_LIMIT_KEY_SECRET`, so the bucket table never holds them in a form that can be reversed or replayed. Scope names are literals and stay readable. A caller that cannot be identified is given its own bucket rather than a shared one, so an unidentifiable request can neither accumulate against a common ceiling nor exhaust one on everyone's behalf.
 
 ## Team management
 
