@@ -58,3 +58,5 @@ npm run verify
 This runs, in order: `npm test`, `npm run lint`, `npm run typecheck`, and `npm run build`. The suites cover route integrity, input validation and upload signature checks, app-URL and redirect safety, token generation, and the SQL contract for RLS coverage, immutability triggers, rate limiting, and invitation authorization.
 
 The SQL workflow functions in `002_security_and_workflow.sql` are the source of truth for version numbering, review-token creation, client actions, and atomic approval. Authenticated data access is checked again in server code and protected by RLS in PostgreSQL. After changing any migration, run `npm run db:types` with the project linked so `src/lib/supabase/database.types.ts` stays in sync.
+
+## MVP Done -- testing stage
