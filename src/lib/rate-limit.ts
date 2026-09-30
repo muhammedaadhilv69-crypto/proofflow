@@ -1,17 +1,43 @@
+import { createHash } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type RateLimitDecision = "allowed" | "limited" | "unavailable";
 
 /**
- * Keys become Postgres text, so they are constrained to characters that cannot
- * need escaping. Anything else is treated as over the limit rather than being
- * passed through to the database.
+ * Keys are stored as Postgres text and used in `bucket_key`, so segments are
+ * restricted to characters that never need escaping. A segment that does not
+ * already qualify is hashed rather than dropped, which keeps distinct values
+ * distinct instead of collapsing unrelated callers into one bucket.
  */
+const SAFE_SEGMENT = /^[A-Za-z0-9._-]{1,64}$/;
 const SAFE_KEY = /^[A-Za-z0-9:._-]{1,200}$/;
 
 /** Matches a dotted-quad or IPv6 address; anything else is not an address. */
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
 const IPV6 = /^[0-9A-Fa-f:]{2,45}$/;
+
+/**
+ * Normalises one key segment. Emails and other PII are hashed so the bucket
+ * table never stores an address in plaintext, while staying deterministic so
+ * per-account limits still work.
+ */
+export function toKeySegment(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return "none";
+  if (SAFE_SEGMENT.test(normalized)) return normalized;
+  return createHash("sha256").update(normalized).digest("hex");
+}
+
+/**
+ * Builds a rate-limit key that is guaranteed to pass `SAFE_KEY`.
+ *
+ * Every caller must go through this. An earlier version interpolated raw email
+ * addresses into the key, which the safety check then rejected, so every signup
+ * and login failed with "Too many attempts" regardless of actual usage.
+ */
+export function buildRateLimitKey(...segments: string[]) {
+  return segments.map(toKeySegment).join(":");
+}
 
 /**
  * Fixed-window counter stored in Postgres.
@@ -26,7 +52,15 @@ export async function checkRateLimit(
   limit: number,
   windowMs: number,
 ): Promise<RateLimitDecision> {
-  if (!SAFE_KEY.test(key)) return "limited";
+  if (!SAFE_KEY.test(key)) {
+    // Reaching this means a caller bypassed buildRateLimitKey. Fail closed, but
+    // log loudly, because the symptom otherwise looks like real throttling.
+    console.error(
+      "Rate limit key rejected; use buildRateLimitKey to construct keys",
+      { key },
+    );
+    return "limited";
+  }
 
   const windowSeconds = Math.max(1, Math.ceil(windowMs / 1000));
   const { data, error } = await createAdminClient().rpc("consume_rate_limit", {
@@ -95,7 +129,7 @@ export async function limitAuthenticatedRequest(
   windowMs: number,
 ) {
   const decision = await checkRateLimit(
-    `api:${scope}:${clientIpFrom(request)}`,
+    buildRateLimitKey("api", scope, clientIpFrom(request)),
     limit,
     windowMs,
   );
@@ -111,7 +145,12 @@ export async function limitReviewRequest(
   windowMs: number,
 ) {
   const decision = await checkRateLimit(
-    `review:${scope}:${reviewToken}:${clientIpFrom(request)}`,
+    buildRateLimitKey(
+      "review",
+      scope,
+      reviewToken,
+      clientIpFrom(request),
+    ),
     limit,
     windowMs,
   );

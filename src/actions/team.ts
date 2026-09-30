@@ -7,7 +7,12 @@ import { sendWorkspaceInviteEmail } from "@/lib/email";
 import { inviteSchema, memberRoleSchema, uuidSchema } from "@/lib/validation";
 import { requireAppUrl } from "@/lib/app-url";
 import { ROUTES, invitePath } from "@/lib/routes";
-import { checkRateLimit, clientIpFromHeaders } from "@/lib/rate-limit";
+import {
+  buildRateLimitKey,
+  checkRateLimit,
+  clientIpFromHeaders,
+  decide,
+} from "@/lib/rate-limit";
 import {
   acceptInvitation,
   createInvitation,
@@ -53,9 +58,12 @@ export async function inviteMemberAction(
     return failure("You are already a member of this workspace");
 
   const ip = clientIpFromHeaders(await headers());
-  if (
-    !(await checkRateLimit(`team:invite:${ip}`, 20, 60 * 60_000))
-  )
+  const decision = await checkRateLimit(
+    buildRateLimitKey("team", "invite", ip),
+    20,
+    60 * 60_000,
+  );
+  if (!decide(decision))
     return failure("Too many invitations sent. Try again later.");
 
   const created = await createInvitation(context, parsed.data.email);

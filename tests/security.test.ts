@@ -4,9 +4,11 @@ import { getAppUrl, requireAppUrl } from "@/lib/app-url";
 import { safeRedirectTarget } from "@/lib/routes";
 import { isSameOrigin } from "@/lib/request-security";
 import {
+  buildRateLimitKey,
   clientIpFromHeaders,
   decide,
   decideForAuth,
+  toKeySegment,
 } from "@/lib/rate-limit";
 import { createOpaqueToken, hashReviewToken } from "@/lib/tokens";
 
@@ -157,4 +159,77 @@ test("caller addresses are validated rather than trusted", () => {
   assert.equal(forwarded("'; drop table rate_limit_buckets; --"), "unknown");
   assert.equal(forwarded("999.999.999.999.999"), "unknown");
   assert.equal(clientIpFromHeaders(new Headers()), "unknown");
+});
+
+test("rate limit keys stay valid for real-world identities", () => {
+  // Regression: an email address was interpolated straight into the key, and
+  // the safety check then rejected it because "@" is not a safe character. Every
+  // signup and login failed with "Too many attempts" on the very first attempt.
+  const SAFE_KEY = /^[A-Za-z0-9:._-]{1,200}$/;
+
+  const keys = [
+    buildRateLimitKey("auth", "signup", "account", "hamdan@example.com"),
+    buildRateLimitKey("auth", "login", "account", "hamdan@example.com"),
+    buildRateLimitKey("auth", "login", "burst", "203.0.113.7"),
+    buildRateLimitKey("auth", "login", "burst", "2001:db8::1"),
+    buildRateLimitKey("auth", "login", "burst", "unknown"),
+    buildRateLimitKey("team", "invite", "198.51.100.4"),
+    buildRateLimitKey("api", "versions", "203.0.113.7"),
+    buildRateLimitKey(
+      "review",
+      "approve",
+      "a".repeat(64),
+      "203.0.113.7",
+    ),
+  ];
+
+  for (const key of keys) {
+    assert.match(
+      key,
+      SAFE_KEY,
+      `key would be rejected and deny every request: ${key}`,
+    );
+  }
+});
+
+test("identity segments are hashed so emails are not stored in plaintext", () => {
+  const key = buildRateLimitKey("auth", "login", "account", "hamdan@example.com");
+  assert.ok(
+    !key.includes("hamdan") && !key.includes("@"),
+    "the bucket table must not persist account addresses",
+  );
+  // Hashing must stay deterministic, or per-account limits would not work.
+  assert.equal(
+    key,
+    buildRateLimitKey("auth", "login", "account", "hamdan@example.com"),
+  );
+  // Case and surrounding whitespace must not create a second bucket.
+  assert.equal(
+    key,
+    buildRateLimitKey("auth", "login", "account", "  Hamdan@Example.com "),
+  );
+  // Distinct addresses must still land in distinct buckets.
+  assert.notEqual(
+    key,
+    buildRateLimitKey("auth", "login", "account", "someone@example.com"),
+  );
+});
+
+test("an unbounded identity cannot overflow the key column", () => {
+  const key = buildRateLimitKey(
+    "auth",
+    "login",
+    "account",
+    "x".repeat(100_000),
+  );
+  assert.ok(key.length <= 200, `key was ${key.length} characters`);
+  assert.match(key, /^[A-Za-z0-9:._-]+$/);
+});
+
+test("safe segments are kept readable for debugging", () => {
+  assert.equal(toKeySegment("203.0.113.7"), "203.0.113.7");
+  assert.equal(toKeySegment("signup"), "signup");
+  assert.equal(toKeySegment("a".repeat(64)), "a".repeat(64));
+  assert.equal(toKeySegment("  "), "none");
+  assert.equal(toKeySegment(""), "none");
 });

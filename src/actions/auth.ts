@@ -9,7 +9,12 @@ import { loginSchema, signupSchema } from "@/lib/validation";
 import { trackEvent } from "@/lib/analytics";
 import { requireAppUrl } from "@/lib/app-url";
 import { ROUTES } from "@/lib/routes";
-import { checkRateLimit, clientIpFromHeaders, decideForAuth } from "@/lib/rate-limit";
+import {
+  buildRateLimitKey,
+  checkRateLimit,
+  clientIpFromHeaders,
+  decideForAuth,
+} from "@/lib/rate-limit";
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
@@ -47,18 +52,19 @@ async function limitAuthAttempt(
   identity: string,
   ip: string,
 ): Promise<boolean> {
-  const normalized = identity.toLowerCase().slice(0, 254);
   const burst = await checkRateLimit(
-    `auth:${scope}:burst:${ip}`,
+    buildRateLimitKey("auth", scope, "burst", ip),
     20,
     15 * MINUTE,
   );
   if (!decideForAuth(burst)) return false;
 
-  if (!normalized) return true;
+  if (!identity.trim()) return true;
 
+  // Hashed by buildRateLimitKey, so the account address is never written to
+  // rate_limit_buckets while per-account limits still apply.
   const sustained = await checkRateLimit(
-    `auth:${scope}:account:${normalized}`,
+    buildRateLimitKey("auth", scope, "account", identity),
     30,
     DAY,
   );
