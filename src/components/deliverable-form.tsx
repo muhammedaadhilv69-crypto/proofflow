@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { createDeliverableAction } from "@/actions/workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Field, FormError } from "@/components/ui/field";
+import { useToast } from "@/hooks/use-toast";
 
 export function DeliverableForm({
   workspaceId,
@@ -16,6 +17,7 @@ export function DeliverableForm({
   projectId: string;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [form, setForm] = useState({ name: "", description: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,50 +32,60 @@ export function DeliverableForm({
     data.set("name", form.name);
     data.set("description", form.description);
     const result = await createDeliverableAction(data);
-    if (result && "error" in result && result.error) setError(result.error);
-    else {
-      router.refresh();
-      setForm({ name: "", description: "" });
+    if (result && "error" in result && result.error) {
+      setError(result.error);
+      setLoading(false);
+      return;
     }
+    setForm({ name: "", description: "" });
     setLoading(false);
+    toast({
+      variant: "success",
+      title: "Deliverable added",
+      description: "Open it to upload version 1.",
+    });
+    router.refresh();
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {error ? (
-        <p
-          role="alert"
-          className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-        >
-          {error}
-        </p>
-      ) : null}
-      <div className="space-y-2">
-        <Label htmlFor="deliverable-name">Name</Label>
-        <Input
-          id="deliverable-name"
-          value={form.name}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
-          required
-          disabled={loading}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="deliverable-description">
-          Description{" "}
-          <span className="font-normal text-muted-foreground">(optional)</span>
-        </Label>
-        <Textarea
-          id="deliverable-description"
-          value={form.description}
-          onChange={(event) =>
-            setForm({ ...form, description: event.target.value })
-          }
-          disabled={loading}
-        />
-      </div>
-      <Button type="submit" disabled={loading}>
-        {loading ? "Adding..." : "Add deliverable"}
+      {error ? <FormError>{error}</FormError> : null}
+
+      <Field
+        label="Name"
+        required
+        hint="One thing the client approves, such as a set of social images."
+      >
+        {({ id, describedBy }) => (
+          <Input
+            id={id}
+            aria-describedby={describedBy}
+            value={form.name}
+            onChange={(event) => setForm({ ...form, name: event.target.value })}
+            placeholder="Homepage hero images"
+            required
+            disabled={loading}
+          />
+        )}
+      </Field>
+
+      <Field label="Description" hint="Optional.">
+        {({ id, describedBy }) => (
+          <Textarea
+            id={id}
+            aria-describedby={describedBy}
+            rows={2}
+            value={form.description}
+            onChange={(event) =>
+              setForm({ ...form, description: event.target.value })
+            }
+            disabled={loading}
+          />
+        )}
+      </Field>
+
+      <Button type="submit" disabled={loading} block>
+        {loading ? "Adding" : "Add deliverable"}
       </Button>
     </form>
   );

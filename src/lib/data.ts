@@ -419,6 +419,31 @@ export async function listNotifications(context: AuthenticatedContext) {
   );
 }
 
+export async function markNotificationRead(
+  context: AuthenticatedContext,
+  notificationId: string,
+) {
+  const { error } = await context.admin
+    .from("notifications")
+    .update({ read: true })
+    .eq("id", notificationId)
+    .eq("workspace_id", context.workspaceId)
+    .eq("user_id", context.user.id);
+  if (error) throw new Error("Could not mark notification as read");
+}
+
+export async function markAllNotificationsRead(
+  context: AuthenticatedContext,
+) {
+  const { error } = await context.admin
+    .from("notifications")
+    .update({ read: true })
+    .eq("workspace_id", context.workspaceId)
+    .eq("user_id", context.user.id)
+    .eq("read", false);
+  if (error) throw new Error("Could not mark all notifications as read");
+}
+
 export type PublicComment = Pick<
   CommentRecord,
   "id" | "author_name" | "author_type" | "comment_type" | "created_at" | "body"
@@ -638,4 +663,165 @@ export function activityDescription(event: ActivityRecord) {
       ? ` ${event.metadata.approval_number}`
       : "";
   return `${activityLabel(event)}${versionNumber}${approvalNumber} · ${formatDateTime(event.created_at)}`;
+}
+
+export type RecentApproval = {
+  id: string;
+  approval_number: string;
+  approved_at: string;
+  client_name: string;
+  deliverable_id: string;
+  deliverable_name: string;
+  project_id: string;
+  project_name: string;
+  version_number: number;
+};
+
+/**
+ * The most recent approvals, newest first.
+ *
+ * The dashboard needs to answer "what was just approved, by whom, and which
+ * version did they sign off?" in one glance, and `approval_records` alone
+ * cannot: it stores ids. So the deliverable and version rows are resolved
+ * alongside it rather than embedded, which keeps the shape of this response
+ * identical to the one `getDeliverable` uses.
+ */
+export async function listRecentApprovals(
+  context: AuthenticatedContext,
+  limit = 6,
+): Promise<RecentApproval[]> {
+  const { data, error } = await context.admin
+    .from("approval_records")
+    .select("id, approval_number, approved_at, client_name, deliverable_id, project_id, version_id")
+    .eq("workspace_id", context.workspaceId)
+    .order("approved_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error("Could not load recent approvals");
+
+  const records = (data ?? []) as Array<{
+    id: string;
+    approval_number: string;
+    approved_at: string;
+    client_name: string;
+    deliverable_id: string;
+    project_id: string;
+    version_id: string;
+  }>;
+  if (!records.length) return [];
+
+  const deliverableIds = [
+    ...new Set(records.map((record) => record.deliverable_id)),
+  ];
+  const versionIds = [...new Set(records.map((record) => record.version_id))];
+
+  const [deliverablesResult, versionsResult] = await Promise.all([
+    context.admin
+      .from("deliverables")
+      .select("id, name, project_id")
+      .eq("workspace_id", context.workspaceId)
+      .in("id", deliverableIds),
+    context.admin
+      .from("versions")
+      .select("id, version_number, project_id")
+      .eq("workspace_id", context.workspaceId)
+      .in("id", versionIds),
+  ]);
+
+  const deliverableMap = new Map(
+    ((deliverablesResult.data ?? []) as Array<{
+      id: string;
+      name: string;
+      project_id: string;
+    }>).map((row) => [row.id, row]),
+  );
+  const versionMap = new Map(
+    ((versionsResult.data ?? []) as Array<{
+      id: string;
+      version_number: number;
+      project_id: string;
+    }>).map((row) => [row.id, row]),
+  );
+
+  const projectIds = [
+    ...new Set(
+      records
+        .map((record) => deliverableMap.get(record.deliverable_id)?.project_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const projectsResult = projectIds.length
+    ? await context.admin
+        .from("projects")
+        .select("id, name")
+        .eq("workspace_id", context.workspaceId)
+        .in("id", projectIds)
+    : { data: [] as Array<{ id: string; name: string }> };
+
+  const projectMap = new Map(
+    ((projectsResult.data ?? []) as Array<{ id: string; name: string }>).map(
+      (row) => [row.id, row],
+    ),
+  );
+
+  return records
+    .map((record) => {
+      const deliverable = deliverableMap.get(record.deliverable_id);
+      const version = versionMap.get(record.version_id);
+      const project = deliverable ? projectMap.get(deliverable.project_id) : null;
+      return {
+        id: record.id,
+        approval_number: record.approval_number,
+        approved_at: record.approved_at,
+        client_name: record.client_name,
+        deliverable_id: record.deliverable_id,
+        deliverable_name: deliverable?.name ?? "Deleted deliverable",
+        project_id: record.project_id,
+        project_name: project?.name ?? "Deleted project",
+        version_number: version?.version_number ?? 0,
+      };
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.approved_at).getTime() - new Date(a.approved_at).getTime(),
+    );
+}
+
+/**
+ * Which of the given versions currently have a usable review link.
+ *
+ * A deliverable sitting in IN_REVIEW is not necessarily sent: the agency can
+ * upload a version and leave it before creating the link. The dashboard uses
+ * this to tell "send the review link" apart from "waiting on the client",
+ * which are very different things to see on a worklist.
+ *
+ * Expiry is evaluated against `expires_at` and revoked links are excluded,
+ * matching the check the review page itself performs, so the worklist and the
+ * client's experience of the same link never disagree.
+ */
+export async function listLiveReviewVersionIds(
+  context: AuthenticatedContext,
+  versionIds: string[],
+): Promise<Set<string>> {
+  if (!versionIds.length) return new Set();
+
+  const { data, error } = await context.admin
+    .from("review_tokens")
+    .select("version_id, expires_at, revoked_at")
+    .eq("workspace_id", context.workspaceId)
+    .in("version_id", versionIds)
+    .is("revoked_at", null);
+
+  if (error) throw new Error("Could not load review links");
+
+  const now = Date.now();
+  const live = new Set<string>();
+  for (const token of (data ?? []) as Array<{
+    version_id: string;
+    expires_at: string | null;
+  }>) {
+    if (token.expires_at && new Date(token.expires_at).getTime() <= now) continue;
+    live.add(token.version_id);
+  }
+  return live;
 }

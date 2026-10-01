@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { acceptInvitationAction } from "@/actions/team";
 import { Button } from "@/components/ui/button";
+import { FormError } from "@/components/ui/field";
 
 export function AcceptInviteForm({
   token,
@@ -34,12 +35,19 @@ export function AcceptInviteForm({
 
   if (!signedIn) {
     return (
-      <div className="space-y-2">
-        <Button asChild className="w-full">
+      <div className="space-y-3">
+        <Button asChild block>
           <Link href="/login">Sign in to accept</Link>
         </Button>
-        <p className="text-center text-xs text-muted-foreground">
-          No account yet? <Link href="/signup" className="text-primary hover:underline">Create one</Link> with the invited address.
+        <p className="text-xs leading-relaxed text-ink-faint">
+          No account yet?{" "}
+          <Link
+            href="/signup"
+            className="text-signal underline-offset-4 hover:underline"
+          >
+            Create one
+          </Link>{" "}
+          using the invited email address.
         </p>
       </div>
     );
@@ -47,16 +55,9 @@ export function AcceptInviteForm({
 
   return (
     <div className="space-y-3">
-      {error ? (
-        <p
-          role="alert"
-          className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-        >
-          {error}
-        </p>
-      ) : null}
-      <Button className="w-full" onClick={accept} disabled={loading}>
-        {loading ? "Joining..." : "Accept invitation"}
+      {error ? <FormError>{error}</FormError> : null}
+      <Button block onClick={accept} disabled={loading}>
+        {loading ? "Joining" : "Accept invitation"}
       </Button>
     </div>
   );

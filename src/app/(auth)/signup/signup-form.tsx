@@ -7,15 +7,7 @@ import { signup } from "@/actions/auth";
 import { ROUTES } from "@/lib/routes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Field, FormError } from "@/components/ui/field";
 
 export function SignupForm() {
   const router = useRouter();
@@ -52,61 +44,63 @@ export function SignupForm() {
 
     router.push(
       `${ROUTES.login}?message=${encodeURIComponent(
-        result?.message ?? "Account created. Check your email to confirm your account.",
+        result?.message ??
+          "Account created. Check your email to confirm your account.",
       )}`,
     );
     router.refresh();
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create your account</CardTitle>
-        <CardDescription>
-          Start collecting clear, version-specific client approvals.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={submit} className="space-y-4">
-          {error ? (
-            <p
-              role="alert"
-              className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-            >
-              {error}
-            </p>
-          ) : null}
-          <div className="space-y-2">
-            <Label htmlFor="name">Full name</Label>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink">
+          Create your account
+        </h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+          You get a workspace for your studio. Invite teammates when you need
+          them.
+        </p>
+      </div>
+
+      <form onSubmit={submit} className="space-y-5">
+        {error ? <FormError>{error}</FormError> : null}
+
+        <Field label="Full name" required hint="Shown on the approvals you record.">
+          {({ id, describedBy }) => (
             <Input
-              id="name"
+              id={id}
+              aria-describedby={describedBy}
               autoComplete="name"
+              autoFocus
               value={form.name}
-              onChange={(event) =>
-                setForm({ ...form, name: event.target.value })
-              }
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
               required
               disabled={loading}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+          )}
+        </Field>
+
+        <Field label="Email" required>
+          {({ id }) => (
             <Input
-              id="email"
+              id={id}
               type="email"
               autoComplete="email"
               value={form.email}
-              onChange={(event) =>
-                setForm({ ...form, email: event.target.value })
-              }
+              onChange={(event) => setForm({ ...form, email: event.target.value })}
+              placeholder="you@studio.com"
               required
               disabled={loading}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+          )}
+        </Field>
+
+        <Field label="Password" required hint="At least 8 characters.">
+          {({ id, describedBy }) => (
             <Input
-              id="password"
+              id={id}
+              aria-describedby={describedBy}
               type="password"
               autoComplete="new-password"
               minLength={8}
@@ -117,14 +111,13 @@ export function SignupForm() {
               required
               disabled={loading}
             />
-            <p className="text-xs text-muted-foreground">
-              Use at least 8 characters.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm password</Label>
+          )}
+        </Field>
+
+        <Field label="Confirm password" required>
+          {({ id }) => (
             <Input
-              id="confirmPassword"
+              id={id}
               type="password"
               autoComplete="new-password"
               minLength={8}
@@ -135,20 +128,23 @@ export function SignupForm() {
               required
               disabled={loading}
             />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Create account"}
-          </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="justify-center">
-        <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link href={ROUTES.login} className="text-primary hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+          )}
+        </Field>
+
+        <Button type="submit" block disabled={loading}>
+          {loading ? "Creating account" : "Create account"}
+        </Button>
+      </form>
+
+      <p className="text-sm text-ink-soft">
+        Already have an account?{" "}
+        <Link
+          href={ROUTES.login}
+          className="text-signal underline-offset-4 hover:underline"
+        >
+          Sign in
+        </Link>
+      </p>
+    </div>
   );
 }

@@ -1,22 +1,27 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { inputBase } from "@/components/ui/input";
 
-export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>
+export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  invalid?: boolean;
+};
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => {
-    return (
-      <textarea
-        className={cn(
-          "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Textarea.displayName = "Textarea"
+  ({ className, invalid, rows = 4, ...props }, ref) => (
+    <textarea
+      rows={rows}
+      aria-invalid={invalid || undefined}
+      className={cn(
+        inputBase,
+        "h-auto min-h-20 resize-y px-2.5 py-2 leading-relaxed",
+        invalid && "border-destructive focus-visible:border-destructive",
+        className,
+      )}
+      ref={ref}
+      {...props}
+    />
+  ),
+);
+Textarea.displayName = "Textarea";
 
-export { Textarea }
+export { Textarea };

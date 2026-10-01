@@ -1,86 +1,226 @@
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Minus } from "lucide-react";
+import { ROUTES } from "@/lib/routes";
+import { MarketingFooter, MarketingHeader } from "@/app/(marketing)/marketing-chrome";
 import { Button } from "@/components/ui/button";
+import { SlugLine } from "@/components/slug-line";
 
-const plans = [
-  { name: "Free", price: "$0", description: "For trying the workflow" },
-  { name: "Solo", price: "$12", description: "For independent freelancers" },
+type Plan = {
+  id: string;
+  name: string;
+  price: number;
+  for: string;
+  /** Marks the recommended plan without enlarging it or tinting it. */
+  recommended?: boolean;
+};
+
+const PLANS: Plan[] = [
+  { id: "free", name: "Free", price: 0, for: "One project, end to end" },
+  { id: "solo", name: "Solo", price: 12, for: "Independent freelancers" },
   {
+    id: "agency",
     name: "Agency",
-    price: "$39",
-    description: "For small client teams",
-    featured: true,
+    price: 39,
+    for: "Small client-facing teams",
+    recommended: true,
   },
-  { name: "Agency Pro", price: "$79", description: "For growing agencies" },
+  { id: "pro", name: "Pro", price: 79, for: "Growing agencies" },
+];
+
+/**
+ * A comparison grid, not four price cards.
+ *
+ * Cards force the reader to hold one plan in their head while scanning the
+ * next, which is exactly the wrong way to compare. A grid with plans as columns
+ * puts the variable on the horizontal axis, where the eye already scans. The
+ * recommended plan is marked with a rule and a note rather than a colour wash
+ * and a bigger box, because nothing here is urgent.
+ *
+ * On narrow screens the grid scrolls horizontally under a sticky label column,
+ * which keeps the comparison intact instead of collapsing it into four separate
+ * stacks the reader has to reassemble by hand.
+ */
+const CAPABILITIES: Array<{
+  label: string;
+  perPlan: Record<string, string | true | false>;
+}> = [
+  {
+    label: "Projects",
+    perPlan: { free: "1", solo: "10", agency: "Unlimited", pro: "Unlimited" },
+  },
+  {
+    label: "Deliverables per project",
+    perPlan: { free: "3", solo: "Unlimited", agency: "Unlimited", pro: "Unlimited" },
+  },
+  {
+    label: "Versions per deliverable",
+    perPlan: { free: "3", solo: "20", agency: "Unlimited", pro: "Unlimited" },
+  },
+  {
+    label: "Approval records",
+    perPlan: { free: true, solo: true, agency: true, pro: true },
+  },
+  {
+    label: "Client review links",
+    perPlan: { free: true, solo: true, agency: true, pro: true },
+  },
+  {
+    label: "Team members",
+    perPlan: { free: "1", solo: "1", agency: "10", pro: "Unlimited" },
+  },
+  {
+    label: "Link expiry and revocation",
+    perPlan: { free: true, solo: true, agency: true, pro: true },
+  },
+  {
+    label: "Client accounts required",
+    perPlan: { free: false, solo: false, agency: false, pro: false },
+  },
 ];
 
 export default function PricingPage() {
   return (
-    <main className="min-h-screen bg-muted/20">
-      <header className="border-b bg-background">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
-          <Link href="/" className="font-semibold">
-            ProofFlow
-          </Link>
-          <Button asChild size="sm" variant="outline">
-            <Link href="/signup">Start free</Link>
-          </Button>
-        </div>
-      </header>
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-medium text-primary">Simple pricing</p>
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">
-            Choose the workspace that fits your agency.
-          </h1>
-          <p className="mt-4 text-muted-foreground">
-            Start free. Upgrade when your workflow grows.
-          </p>
-        </div>
-        <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`rounded-xl border bg-background p-6 ${plan.featured ? "border-primary shadow-md" : ""}`}
-            >
-              {plan.featured ? (
-                <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-primary">
-                  Most popular
-                </p>
-              ) : null}
-              <h2 className="text-lg font-semibold">{plan.name}</h2>
-              <p className="mt-4 text-3xl font-bold">
-                {plan.price}
-                <span className="text-sm font-normal text-muted-foreground">
-                  /month
-                </span>
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {plan.description}
-              </p>
-              <ul className="mt-6 space-y-3 text-sm">
-                {[
-                  "Version-specific approvals",
-                  "Client review links",
-                  "Approval history",
-                ].map((feature) => (
-                  <li key={feature} className="flex gap-2">
-                    <Check className="h-4 w-4 shrink-0 text-primary" />
-                    {feature}
-                  </li>
+    <div className="flex min-h-screen flex-col">
+      <MarketingHeader />
+
+      <main className="flex-1">
+        <section className="border-b border-rule">
+          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-16">
+            <h1 className="max-w-2xl text-[2.125rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink sm:text-4xl">
+              Priced per workspace. Approval records are never behind a paywall.
+            </h1>
+            <SlugLine
+              className="mt-5"
+              items={[
+                { key: "billing", value: "monthly, cancel any time" },
+                { key: "client accounts", value: "never required" },
+              ]}
+            />
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[46rem] border-separate border-spacing-0">
+              <caption className="sr-only">
+                Plan comparison for ProofFlow, listing what each plan includes
+              </caption>
+              <thead>
+                <tr>
+                  <th
+                    scope="col"
+                    className="sticky left-0 z-10 w-56 border-b-2 border-ink bg-paper py-3 pr-4 text-left align-bottom"
+                  >
+                    <span className="slug-key">included</span>
+                  </th>
+                  {PLANS.map((plan) => (
+                    <th
+                      key={plan.id}
+                      scope="col"
+                      className={
+                        plan.recommended
+                          ? "border-b-2 border-ink border-x-2 border-t-2 px-4 py-3 text-left align-bottom"
+                          : "border-b-2 border-ink px-4 py-3 text-left align-bottom"
+                      }
+                    >
+                      {plan.recommended ? (
+                        <span className="slug-key block text-ink">
+                          recommended
+                        </span>
+                      ) : null}
+                      <span className="block text-base font-semibold tracking-[-0.01em] text-ink">
+                        {plan.name}
+                      </span>
+                      <span className="mt-1 block font-mono text-lg tabular-nums text-ink">
+                        {plan.price === 0 ? "$0" : `$${plan.price}`}
+                        <span className="ml-1 text-xs text-ink-faint">/mo</span>
+                      </span>
+                      <span className="mt-0.5 block text-xs font-normal leading-snug text-ink-faint">
+                        {plan.for}
+                      </span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {CAPABILITIES.map((row) => (
+                  <tr key={row.label}>
+                    <th
+                      scope="row"
+                      className="sticky left-0 z-10 border-b border-rule bg-paper py-3 pr-4 text-left text-sm font-normal text-ink-soft"
+                    >
+                      {row.label}
+                    </th>
+                    {PLANS.map((plan) => {
+                      const value = row.perPlan[plan.id];
+                      const featured = plan.recommended;
+                      return (
+                        <td
+                          key={plan.id}
+                          className={
+                            featured
+                              ? "border-b border-l border-r border-rule bg-sheet px-4 py-3 text-sm text-ink"
+                              : "border-b border-rule px-4 py-3 text-sm text-ink-soft"
+                          }
+                        >
+                          {value === true ? (
+                            <>
+                              <Check
+                                aria-hidden="true"
+                                className="size-4 text-ink"
+                              />
+                              <span className="sr-only">Included</span>
+                            </>
+                          ) : value === false ? (
+                            <>
+                              <Minus
+                                aria-hidden="true"
+                                className="size-4 text-ink-faint"
+                              />
+                              <span className="sr-only">Not included</span>
+                            </>
+                          ) : (
+                            <span className="font-mono tabular-nums">
+                              {value}
+                            </span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
                 ))}
-              </ul>
-              <Button
-                asChild
-                className="mt-7 w-full"
-                variant={plan.featured ? "default" : "outline"}
-              >
-                <Link href="/signup">Get started</Link>
-              </Button>
-            </div>
-          ))}
-        </div>
-      </section>
-    </main>
+                <tr>
+                  <td className="sticky left-0 z-10 bg-paper py-4" />
+                  {PLANS.map((plan) => (
+                    <td
+                      key={plan.id}
+                      className={
+                        plan.recommended
+                          ? "border-x-2 border-b-2 border-ink px-4 py-4"
+                          : "px-4 py-4"
+                      }
+                    >
+                      <Button asChild block variant={plan.recommended ? "default" : "outline"}>
+                        <Link href={ROUTES.signup}>
+                          {plan.price === 0 ? "Start free" : `Choose ${plan.name}`}
+                        </Link>
+                      </Button>
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-6 max-w-2xl text-sm leading-relaxed text-ink-faint">
+            Every plan includes the full approval record: client name, email,
+            version number, UTC timestamp, and approval ID. Upgrading changes how
+            much work you can hold, not what you are allowed to prove.
+          </p>
+        </section>
+      </main>
+
+      <MarketingFooter />
+    </div>
   );
 }

@@ -6,14 +6,7 @@ import { forgotPassword } from "@/actions/auth";
 import { ROUTES } from "@/lib/routes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Field, FormError } from "@/components/ui/field";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
@@ -35,53 +28,57 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Reset your password</CardTitle>
-        <CardDescription>
-          We will email you a secure reset link.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={submit} className="space-y-4">
-          {error ? (
-            <p
-              role="alert"
-              className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-            >
-              {error}
-            </p>
-          ) : null}
-          {message ? (
-            <p
-              role="status"
-              className="rounded-md bg-green-50 p-3 text-sm text-green-700"
-            >
-              {message}
-            </p>
-          ) : null}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink">
+          Reset your password
+        </h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+          Enter the email you sign in with. If an account exists, a reset link
+          is on its way.
+        </p>
+      </div>
+
+      <form onSubmit={submit} className="space-y-5">
+        {error ? <FormError>{error}</FormError> : null}
+        {message ? (
+          <p
+            role="status"
+            className="rounded-control bg-seal px-3 py-2.5 text-sm leading-relaxed text-ink"
+          >
+            {message}
+          </p>
+        ) : null}
+
+        <Field label="Email" required>
+          {({ id }) => (
             <Input
-              id="email"
+              id={id}
               type="email"
               autoComplete="email"
+              autoFocus
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
               disabled={loading}
+              invalid={Boolean(error)}
             />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Sending..." : "Send reset link"}
-          </Button>
-        </form>
-        <p className="mt-4 text-center text-sm">
-          <Link href={ROUTES.login} className="text-primary hover:underline">
-            Back to sign in
-          </Link>
-        </p>
-      </CardContent>
-    </Card>
+          )}
+        </Field>
+
+        <Button type="submit" block disabled={loading}>
+          {loading ? "Sending" : "Send reset link"}
+        </Button>
+      </form>
+
+      <p className="text-sm">
+        <Link
+          href={ROUTES.login}
+          className="text-signal underline-offset-4 hover:underline"
+        >
+          Back to sign in
+        </Link>
+      </p>
+    </div>
   );
 }

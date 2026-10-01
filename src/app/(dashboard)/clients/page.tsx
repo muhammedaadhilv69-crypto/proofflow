@@ -1,91 +1,105 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { getAuthenticatedContext } from "@/lib/authz";
+import { requireAuthenticatedContext } from "@/lib/authz";
 import { listClients, listProjects } from "@/lib/data";
+import { ROUTES } from "@/lib/routes";
+import { initials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ClientForm } from "@/components/client-form";
+import { Plate, PlateBody, PlateHeader, PlateTitle } from "@/components/ui/plate";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
+import { ClientForm } from "@/components/client-form";
 
 export default async function ClientsPage() {
-  const context = await getAuthenticatedContext();
-  if (!context) return null;
+  const context = await requireAuthenticatedContext();
   const [clients, projects] = await Promise.all([
     listClients(context),
     listProjects(context),
   ]);
+
   const projectCounts = new Map<string, number>();
-  projects.forEach((project) =>
+  for (const project of projects) {
     projectCounts.set(
       project.client_id,
-      (projectCounts.get(project.client_id) || 0) + 1,
-    ),
-  );
+      (projectCounts.get(project.client_id) ?? 0) + 1,
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">Workspace directory</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">Clients</h1>
-        </div>
-        <Button asChild variant="outline">
-          <Link href="#new-client">
-            <Plus className="mr-2 h-4 w-4" />
-            Add client
-          </Link>
-        </Button>
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Your clients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {clients.length ? (
-              <div className="divide-y">
-                {clients.map((client) => (
+    <div className="space-y-8">
+      <PageHeader
+        path={[
+          { label: "Workspace", href: ROUTES.dashboard },
+          { label: "Clients" },
+        ]}
+        title="Clients"
+        slug={[
+          { key: "total", value: clients.length },
+          { key: "with projects", value: projectCounts.size },
+        ]}
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <a href="#add-client">
+              <Plus aria-hidden="true" />
+              Add client
+            </a>
+          </Button>
+        }
+      />
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        {clients.length ? (
+          <Plate>
+            <PlateHeader>
+              <PlateTitle>Directory</PlateTitle>
+              <span className="slug">{clients.length} clients</span>
+            </PlateHeader>
+            <ul className="divide-y divide-rule">
+              {clients.map((client) => (
+                <li key={client.id}>
                   <Link
-                    key={client.id}
                     href={`/clients/${client.id}`}
-                    className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0 hover:text-primary"
+                    className="flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-wash"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
-                        {client.name.slice(0, 1).toUpperCase()}
+                    <span
+                      aria-hidden="true"
+                      className="grid size-8 shrink-0 place-items-center rounded-full bg-wash text-[0.6875rem] font-semibold text-ink-soft"
+                    >
+                      {initials(client.name)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium text-ink">
+                        {client.name}
                       </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {client.name}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {client.email}
-                          {client.company ? ` · ${client.company}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {projectCounts.get(client.id) || 0} projects
+                      <span className="slug block truncate">
+                        {client.email}
+                        {client.company ? ` / ${client.company}` : ""}
+                      </span>
+                    </span>
+                    <span className="slug shrink-0">
+                      {projectCounts.get(client.id) ?? 0} projects
                     </span>
                   </Link>
-                ))}
-              </div>
-            ) : (
-              <EmptyState
-                title="No clients yet"
-                description="Add a client to associate projects and review links."
-              />
-            )}
-          </CardContent>
-        </Card>
-        <Card id="new-client">
-          <CardHeader>
-            <CardTitle className="text-base">Add client</CardTitle>
-          </CardHeader>
-          <CardContent>
+                </li>
+              ))}
+            </ul>
+          </Plate>
+        ) : (
+          <EmptyState
+            title="No clients yet"
+            description="Every deliverable belongs to a client, and the client is who an approval is recorded against. Add one to get started."
+            nextStep="add a client, then create a project for them"
+          />
+        )}
+
+        <Plate accentTop id="add-client">
+          <PlateHeader>
+            <PlateTitle>Add client</PlateTitle>
+          </PlateHeader>
+          <PlateBody>
             <ClientForm workspaceId={context.workspaceId} />
-          </CardContent>
-        </Card>
+          </PlateBody>
+        </Plate>
       </div>
     </div>
   );

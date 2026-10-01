@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
@@ -13,17 +14,26 @@ export default function ReviewErrorBoundary({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error, {
-      tags: { boundary: "review" },
-    });
+    Sentry.captureException(error, { tags: { boundary: "review" } });
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md items-center px-4">
-      <div className="w-full space-y-4">
-        <ErrorBlock message="This review could not be loaded. The link may be invalid or the service may be unavailable." />
-        <Button onClick={() => reset()}>Try again</Button>
+    <div className="flex min-h-screen items-center bg-paper px-4 py-12">
+      <div className="mx-auto w-full max-w-md space-y-4">
+        <ErrorBlock
+          title="This review did not load"
+          action={{ label: "Try again", onClick: () => reset() }}
+        >
+          The page failed before it could show the file. This is usually
+          temporary.
+        </ErrorBlock>
+        <p className="text-sm text-ink-faint">
+          If it keeps failing, ask the agency to send you a new review link.
+        </p>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/">Go to ProofFlow</Link>
+        </Button>
       </div>
-    </main>
+    </div>
   );
 }

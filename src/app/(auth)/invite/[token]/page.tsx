@@ -6,10 +6,16 @@ import { InviteShell } from "./invite-shell";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Workspace invitation | ProofFlow",
+  title: "Workspace invitation",
   robots: { index: false, follow: false },
 };
 
+/**
+ * Lives in the `(auth)` group so it inherits the same split shell as sign-in
+ * and sign-up. An invitation is reached from an email by someone who has never
+ * seen the product, so it should look like the same front door rather than a
+ * second one.
+ */
 export default async function AcceptInvitePage({
   params,
 }: {
@@ -24,17 +30,12 @@ export default async function AcceptInvitePage({
   const { data } = await supabase.auth.getUser();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-10">
-      <div className="w-full max-w-md space-y-6">
-        <p className="text-center text-lg font-semibold">ProofFlow</p>
-        <InviteShell
-          token={token}
-          email={preview?.email ?? null}
-          workspaceName={preview?.workspaceName ?? null}
-          isValid={preview?.isValid ?? false}
-          signedIn={Boolean(data.user)}
-        />
-      </div>
-    </main>
+    <InviteShell
+      token={token}
+      email={preview?.email ?? null}
+      workspaceName={preview?.workspaceName ?? null}
+      isValid={preview?.isValid ?? false}
+      signedIn={Boolean(data.user)}
+    />
   );
 }

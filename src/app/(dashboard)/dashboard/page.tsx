@@ -1,166 +1,253 @@
 import Link from "next/link";
+import { ArrowRight, Plus } from "lucide-react";
+import { getUserName, requireAuthenticatedContext } from "@/lib/authz";
 import {
-  AlertCircle,
-  CheckCircle2,
-  Clock3,
-  FolderKanban,
-  Plus,
-} from "lucide-react";
-import { getAuthenticatedContext } from "@/lib/authz";
-import { getDashboardData } from "@/lib/data";
-import { formatDate } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/status-badge";
+  getDashboardData,
+  listLiveReviewVersionIds,
+  listRecentApprovals,
+} from "@/lib/data";
+import { ROUTES } from "@/lib/routes";
+import { nextAgencyAction } from "@/lib/workflow";
+import {
+  formatDateSlug,
+  formatRelative,
+  formatStampUtc,
+} from "@/lib/utils";
+import { stateLabel, type StateKey } from "@/lib/status";
+import { PageHeader, Section } from "@/components/page-header";
+import { StateChip, StateMark } from "@/components/state-chip";
 import { EmptyState } from "@/components/empty-state";
+import { Button } from "@/components/ui/button";
+import { Plate } from "@/components/ui/plate";
 
 export default async function DashboardPage() {
-  const context = await getAuthenticatedContext();
-  if (!context) return null;
+  const context = await requireAuthenticatedContext();
   const data = await getDashboardData(context);
-  const displayName =
-    typeof context.user.user_metadata?.full_name === "string"
-      ? context.user.user_metadata.full_name
-      : context.user.email?.split("@")[0] || "there";
+
+  const attention = data.needsAttention;
+  const liveLinkVersionIds = await listLiveReviewVersionIds(
+    context,
+    attention
+      .map((item) => item.deliverable.current_version_id)
+      .filter((id): id is string => Boolean(id)),
+  );
+  const recentApprovals = await listRecentApprovals(context);
+
+  const metrics = data.metrics;
+  const firstName = getUserName(context.user).split(" ")[0];
+
+  const hasAnything =
+    attention.length > 0 ||
+    data.recentProjects.length > 0 ||
+    recentApprovals.length > 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm text-muted-foreground">Workspace overview</p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">
-            Good to see you, {displayName}.
-          </h1>
-        </div>
-        <Button asChild>
-          <Link href="/projects/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New project
-          </Link>
-        </Button>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Active projects"
-          value={data.metrics.activeProjects}
-          icon={<FolderKanban className="h-4 w-4" />}
-        />
-        <MetricCard
-          title="Awaiting client"
-          value={data.metrics.awaitingClient}
-          icon={<Clock3 className="h-4 w-4" />}
-        />
-        <MetricCard
-          title="Changes requested"
-          value={data.metrics.changesRequested}
-          icon={<AlertCircle className="h-4 w-4" />}
-        />
-        <MetricCard
-          title="Approved this week"
-          value={data.metrics.approvedThisWeek}
-          icon={<CheckCircle2 className="h-4 w-4" />}
-        />
-      </div>
-      {data.needsAttention.length === 0 && data.recentProjects.length === 0 ? (
+    <div className="space-y-8">
+      <PageHeader
+        path={[{ label: "Workspace", href: ROUTES.dashboard }, { label: "Dashboard" }]}
+        title="Dashboard"
+        slug={[
+          { key: "active", value: metrics.activeProjects },
+          { key: "with client", value: metrics.awaitingClient },
+          { key: "changes requested", value: metrics.changesRequested },
+          { key: "approved 7d", value: metrics.approvedThisWeek },
+        ]}
+        actions={
+          <Button asChild>
+            <Link href={ROUTES.newProject}>
+              <Plus aria-hidden="true" />
+              New project
+            </Link>
+          </Button>
+        }
+      />
+
+      {!hasAnything ? (
         <EmptyState
           title="No projects yet"
-          description="Create your first project to start collecting clear client approvals."
-          actionLabel="Create your first project"
-          actionHref="/projects/new"
+          description="ProofFlow tracks one thing: which version of a deliverable a client approved, and when. Start with a project and it will hold that record for you."
+          nextStep="create a project, add a deliverable, upload version 1"
+          action={{ label: "Create a project", href: ROUTES.newProject }}
+          secondaryAction={{ label: "See how it works", href: "/#how-it-works" }}
         />
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <AlertCircle className="h-4 w-4" />
-                Needs attention
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {data.needsAttention.length ? (
-                data.needsAttention.map(({ deliverable, project, client }) => (
+      ) : null}
+
+      {attention.length ? (
+        <Section
+          title={`Waiting on you, ${firstName}`}
+          slug={[{ key: "items", value: attention.length }]}
+        >
+          <Plate>
+            <ul className="divide-y divide-rule">
+              {attention.map((item) => (
+                <WorklistRow
+                  key={item.deliverable.id}
+                  deliverableId={item.deliverable.id}
+                  projectId={item.project!.id}
+                  name={item.deliverable.name}
+                  projectName={item.project!.name}
+                  clientName={item.client?.name ?? null}
+                  status={item.deliverable.status as StateKey}
+                  updatedAt={item.deliverable.updated_at}
+                  hasLiveLink={liveLinkVersionIds.has(
+                    item.deliverable.current_version_id ?? "",
+                  )}
+                />
+              ))}
+            </ul>
+          </Plate>
+        </Section>
+      ) : null}
+
+      {recentApprovals.length ? (
+        <Section
+          title="Recently approved"
+          slug={[{ key: "records", value: recentApprovals.length }]}
+          action={
+            <Button asChild variant="quiet" size="sm">
+              <Link href={ROUTES.projects}>
+                All projects
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
+          }
+        >
+          <Plate>
+            <ul className="divide-y divide-rule">
+              {recentApprovals.map((approval) => (
+                <li key={approval.id}>
                   <Link
-                    key={deliverable.id}
-                    href={`/projects/${project?.id}/deliverables/${deliverable.id}`}
-                    className="flex items-center justify-between gap-3 rounded-lg border p-3 hover:bg-accent"
+                    href={`/projects/${approval.project_id}/deliverables/${approval.deliverable_id}`}
+                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-3.5 transition-colors hover:bg-wash"
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {deliverable.name}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {project?.name} · {client?.name || "Client"}
-                      </p>
-                    </div>
-                    <StatusBadge status={deliverable.status} />
+                    <span className="flex items-baseline gap-2.5">
+                      <span className="rounded-[1px] bg-ink" aria-hidden="true" />
+                      <span className="font-mono text-xs font-medium tabular-nums text-ink">
+                        {approval.approval_number}
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm text-ink">
+                      {approval.deliverable_name}
+                      <span className="text-ink-faint">
+                        {" "}
+                        v{approval.version_number}
+                      </span>
+                    </span>
+                    <span className="text-xs text-ink-faint">
+                      {approval.client_name}
+                    </span>
+                    <time
+                      dateTime={approval.approved_at}
+                      title={formatStampUtc(approval.approved_at)}
+                      className="font-mono text-xs tabular-nums text-ink-faint"
+                    >
+                      {formatDateSlug(approval.approved_at)}
+                    </time>
                   </Link>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Nothing needs your attention.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <FolderKanban className="h-4 w-4" />
-                Recent projects
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {data.recentProjects.length ? (
-                data.recentProjects.map(({ project, client }) => (
-                  <Link
-                    key={project.id}
-                    href={`/projects/${project.id}`}
-                    className="flex items-center justify-between gap-3 rounded-lg border p-3 hover:bg-accent"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {project.name}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {client?.name || "No client"} · Updated{" "}
-                        {formatDate(project.updated_at)}
-                      </p>
-                    </div>
-                    <StatusBadge status={project.status} />
-                  </Link>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No projects yet.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                </li>
+              ))}
+            </ul>
+          </Plate>
+        </Section>
+      ) : null}
+
+      {data.recentProjects.length ? (
+        <Section title="Recent projects" bodyClassName="w-full">
+          <div className="grid gap-4 lg:grid-cols-2">
+            {data.recentProjects.map(({ project, client }) => (
+              <Plate key={project.id} flat className="border">
+                <Link
+                  href={`/projects/${project.id}`}
+                  className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-4 transition-colors hover:bg-wash"
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
+                    {project.name}
+                  </span>
+                  <span className="truncate text-xs text-ink-faint">
+                    {client?.name ?? "No client"}
+                  </span>
+                  <span className="slug">
+                    updated {formatRelative(project.updated_at)}
+                  </span>
+                </Link>
+              </Plate>
+            ))}
+          </div>
+        </Section>
+      ) : null}
     </div>
   );
 }
 
-function MetricCard({
-  title,
-  value,
-  icon,
+/**
+ * One line of the worklist.
+ *
+ * The action sits on the right in its own column because it is the reason the
+ * row exists; the state chip is there so the action can be trusted at a glance.
+ * A row whose action is "waiting on the client" is deliberately quieter than
+ * one that needs a click, because a worklist where everything looks urgent is
+ * a worklist nobody reads.
+ */
+function WorklistRow({
+  deliverableId,
+  projectId,
+  name,
+  projectName,
+  clientName,
+  status,
+  updatedAt,
+  hasLiveLink,
 }: {
-  title: string;
-  value: number;
-  icon: React.ReactNode;
+  deliverableId: string;
+  projectId: string;
+  name: string;
+  projectName: string;
+  clientName: string | null;
+  status: StateKey;
+  updatedAt: string;
+  hasLiveLink: boolean;
 }) {
+  const action = nextAgencyAction(status, hasLiveLink);
+  const href = `/projects/${projectId}/deliverables/${deliverableId}`;
+  const actionable = action.intent !== "wait" && action.intent !== "none";
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <span className="text-muted-foreground">{icon}</span>
-      </CardHeader>
-      <CardContent>
-        <p className="text-3xl font-bold">{value}</p>
-      </CardContent>
-    </Card>
+    <li>
+      <Link
+        href={href}
+        className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors hover:bg-wash"
+      >
+        <StateMark state={status} className="size-2" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-medium text-ink">
+            {name}
+          </span>
+          <span className="slug block truncate">
+            {projectName}
+            {clientName ? ` / ${clientName}` : ""}
+          </span>
+        </span>
+        <span className="shrink-0">
+          <StateChip state={status} />
+        </span>
+        <span className="slug shrink-0">
+          {actionable ? (
+            <span className="text-ink">{action.label}</span>
+          ) : (
+            <span>{action.label}</span>
+          )}
+        </span>
+        <time
+          dateTime={updatedAt}
+          title={`Updated ${formatStampUtc(updatedAt)}`}
+          className="slug w-16 shrink-0 text-right"
+        >
+          {formatRelative(updatedAt)}
+        </time>
+      </Link>
+      <span className="sr-only">
+        {name}, {projectName}, {stateLabel(status)}, {action.label}
+      </span>
+    </li>
   );
 }

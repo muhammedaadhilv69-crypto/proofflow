@@ -1,24 +1,49 @@
-import { formatDateTime } from "@/lib/utils";
+import { formatDateSlug, formatDateTime } from "@/lib/utils";
 import type { PublicComment } from "@/lib/data";
+import { cn } from "@/lib/utils";
 
-export function CommentItem({ comment }: { comment: PublicComment }) {
+/**
+ * A comment in a thread.
+ *
+ * Comments are prose, not status, so they are set in the body face at a
+ * comfortable measure and get no card, no border, and no background. A change
+ * request is marked by a magenta rule on the left instead, so the reader can
+ * find the thing that needs work without reading every comment.
+ */
+export function CommentItem({
+  comment,
+  className,
+}: {
+  comment: PublicComment;
+  className?: string;
+}) {
+  const isChangeRequest = comment.comment_type === "CHANGE_REQUEST";
+
   return (
-    <article className="rounded-lg border p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-sm font-semibold">{comment.author_name}</p>
-          <p className="text-xs text-muted-foreground">
-            {comment.author_type === "CLIENT" ? "Client" : "Agency"}
-            {comment.comment_type === "CHANGE_REQUEST"
-              ? " · Change request"
-              : ""}
-          </p>
-        </div>
-        <time className="text-xs text-muted-foreground">
-          {formatDateTime(comment.created_at)}
+    <article
+      className={cn(
+        "border-l-2 pl-3",
+        isChangeRequest ? "border-revise" : "border-transparent",
+        className,
+      )}
+    >
+      <header className="flex flex-wrap items-baseline gap-x-2.5">
+        <span className="text-sm font-medium text-ink">
+          {comment.author_name}
+        </span>
+        <span className="label-narrow text-[0.625rem] text-ink-faint">
+          {comment.author_type === "CLIENT" ? "Client" : "Agency"}
+          {isChangeRequest ? " / change request" : ""}
+        </span>
+        <time
+          dateTime={comment.created_at}
+          title={formatDateTime(comment.created_at)}
+          className="font-mono text-[0.6875rem] tabular-nums text-ink-faint"
+        >
+          {formatDateSlug(comment.created_at)}
         </time>
-      </div>
-      <p className="mt-3 whitespace-pre-wrap text-sm leading-6">
+      </header>
+      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
         {comment.body}
       </p>
     </article>

@@ -1,91 +1,103 @@
 import Image from "next/image";
-import { Download, FileText } from "lucide-react";
+import { Download, FileWarning } from "lucide-react";
+import { cn } from "@/lib/utils";
 
+/**
+ * The proof preview.
+ *
+ * This is the one place in the product where a real drop shadow is used on
+ * purpose: the image stands for a sheet of paper lying on a light table, and
+ * giving it lift is the only way to say so without a caption. Everything else
+ * in ProofFlow is interface and stays flat.
+ */
 export function FilePreview({
   url,
   mimeType,
   filename,
+  className,
 }: {
   url: string | null;
   mimeType: string;
   filename: string;
+  className?: string;
 }) {
-  if (!url)
+  if (!url) {
     return (
-      <div className="flex min-h-48 items-center justify-center rounded-lg border bg-muted text-sm text-muted-foreground">
-        Preview unavailable
+      <div
+        className={cn(
+          "flex min-h-48 flex-col items-center justify-center gap-2 rounded-sheet border border-dashed border-rule-strong bg-wash/40 px-6 text-center",
+          className,
+        )}
+      >
+        <FileWarning aria-hidden="true" className="size-5 text-ink-faint" />
+        <p className="text-sm text-ink-soft">
+          This file could not be loaded. It may have been removed from storage.
+        </p>
       </div>
     );
-  if (mimeType === "application/pdf")
+  }
+
+  if (mimeType === "application/pdf") {
     return (
-      <div className="space-y-3">
+      <div className={cn("space-y-2.5", className)}>
         <iframe
           title={filename}
-          src={url}
-          className="h-112 w-full rounded-lg border"
+          src={`${url}#view=FitH`}
+          className="h-[32rem] w-full rounded-sheet border border-rule bg-sheet"
         />
-        <a
-          href={url}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-        >
-          <Download className="h-4 w-4" />
-          Open PDF
-        </a>
+        <OpenLink href={url} label="Open the PDF" />
       </div>
     );
-  if (mimeType === "image/svg+xml")
+  }
+
+  if (mimeType === "image/svg+xml") {
     return (
-      <div className="space-y-3">
+      <div className={cn("space-y-2.5", className)}>
         <iframe
           title={filename}
           src={url}
           sandbox=""
-          className="min-h-64 w-full rounded-lg border bg-white"
+          className="min-h-72 w-full rounded-sheet border border-rule bg-sheet shadow-proof"
         />
-        <a
-          href={url}
-          download={filename}
-          className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-        >
-          <Download className="h-4 w-4" />
-          Download SVG
-        </a>
+        <OpenLink href={url} label="Download the SVG" download />
       </div>
     );
+  }
+
   return (
-    <div className="space-y-3">
-      <div className="relative min-h-64 overflow-hidden rounded-lg border bg-white">
+    <div className={cn("space-y-2.5", className)}>
+      <div className="relative min-h-64 overflow-hidden rounded-sheet border border-rule bg-sheet shadow-proof">
         <Image
           src={url}
           alt={filename}
           fill
           unoptimized
-          sizes="(max-width: 768px) 100vw, 768px"
+          sizes="(max-width: 1024px) 100vw, 720px"
           className="object-contain"
         />
       </div>
-      <a
-        href={url}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-      >
-        <Download className="h-4 w-4" />
-        Open original
-      </a>
+      <OpenLink href={url} label="Open the original file" />
     </div>
   );
 }
 
-export function FileTypeLabel({ mimeType }: { mimeType: string }) {
+function OpenLink({
+  href,
+  label,
+  download,
+}: {
+  href: string;
+  label: string;
+  download?: boolean;
+}) {
   return (
-    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-      <FileText className="h-3 w-3" />
-      {mimeType === "application/pdf"
-        ? "PDF"
-        : mimeType.split("/")[1]?.toUpperCase()}
-    </span>
+    <a
+      href={href}
+      {...(download ? { download: true } : { target: "_blank", rel: "noreferrer" })}
+      className="inline-flex items-center gap-1.5 text-sm text-signal underline-offset-4 hover:underline"
+    >
+      <Download aria-hidden="true" className="size-3.5" />
+      {label}
+    </a>
   );
 }

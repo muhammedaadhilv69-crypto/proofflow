@@ -1,91 +1,338 @@
 @import "tailwindcss";
 
+/*
+ * ProofFlow — the press sheet.
+ *
+ * The product's world is prepress: proofs are pulled, revisions are rounds, a
+ * signed-off proof is locked like a plate. The palette is printer's inks rather
+ * than UI status colors, which buys the one thing a proofing tool needs most:
+ * the approved state must never be mistaken for any other state.
+ *
+ * Two rules hold the system together.
+ *
+ * 1. Cyan is interactive. It marks things you can act on — links, focus, the
+ *    primary control, a live review link. Nothing decorative is ever cyan.
+ *
+ * 2. Approval is ink. Not green. A proof is stamped in the darkest ink on the
+ *    sheet, so "approved" is the heaviest thing on the page rather than one
+ *    more colored pill. Green is spent exactly once, as the tint on the
+ *    approval seal's ground, and nowhere else.
+ */
+
 @theme inline {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-  --color-success: hsl(var(--success));
-  --color-success-foreground: hsl(var(--success-foreground));
-  --color-warning: hsl(var(--warning));
-  --color-warning-foreground: hsl(var(--warning-foreground));
-  --font-sans: var(--font-inter);
+  --color-background: hsl(var(--paper));
+  --color-foreground: hsl(var(--ink));
+  --color-card: hsl(var(--sheet));
+  --color-card-foreground: hsl(var(--ink));
+  --color-popover: hsl(var(--sheet));
+  --color-popover-foreground: hsl(var(--ink));
+  --color-primary: hsl(var(--ink));
+  --color-primary-foreground: hsl(var(--sheet));
+  --color-secondary: hsl(var(--wash));
+  --color-secondary-foreground: hsl(var(--ink-soft));
+  --color-muted: hsl(var(--wash));
+  --color-muted-foreground: hsl(var(--ink-faint));
+  --color-accent: hsl(var(--wash));
+  --color-accent-foreground: hsl(var(--ink));
+  --color-destructive: hsl(var(--fault));
+  --color-destructive-foreground: hsl(var(--sheet));
+  --color-border: hsl(var(--rule));
+  --color-input: hsl(var(--rule-strong));
+  --color-ring: hsl(var(--signal));
+
+  /* The ink ramp. Type only — see the contrast notes against each step. */
+  --color-ink: hsl(var(--ink));
+  --color-ink-soft: hsl(var(--ink-soft));
+  --color-ink-faint: hsl(var(--ink-faint));
+
+  /* Surfaces. Paper is the light table; sheets are the paper on it. */
+  --color-paper: hsl(var(--paper));
+  --color-sheet: hsl(var(--sheet));
+  --color-wash: hsl(var(--wash));
+  --color-rule: hsl(var(--rule));
+  --color-rule-strong: hsl(var(--rule-strong));
+
+  /* Process inks, used strictly as state. */
+  --color-signal: hsl(var(--signal));
+  --color-signal-wash: hsl(var(--signal-wash));
+  --color-revise: hsl(var(--revise));
+  --color-revise-wash: hsl(var(--revise-wash));
+  --color-waiting: hsl(var(--waiting));
+  --color-waiting-wash: hsl(var(--waiting-wash));
+
+  /* The single green in the product: the approval seal's ground. */
+  --color-seal: hsl(var(--seal));
+  --color-seal-mark: hsl(var(--seal-mark));
+
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-narrow: var(--font-archivo-narrow), var(--font-archivo), ui-sans-serif,
+    system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
+
+  /*
+   * Three radii, each tied to a role rather than applied as one house value.
+   * A sheet is a physical object, a control is operated, a mark is stamped.
+   */
+  --radius-sheet: 0.625rem;
+  --radius-control: 0.375rem;
+  --radius-mark: 0.1875rem;
+
+  /*
+   * Shadows carry meaning here, so there are only three. The proof preview gets
+   * `--shadow-proof` because it stands for a sheet of paper resting on a light
+   * table; everything else is interface chrome and barely casts one.
+   */
+  --shadow-sheet: 0 1px 2px hsl(220 33% 12% / 0.04);
+  --shadow-lift: 0 6px 20px -6px hsl(220 33% 12% / 0.12),
+    0 2px 6px -2px hsl(220 33% 12% / 0.06);
+  --shadow-overlay: 0 24px 48px -12px hsl(220 33% 12% / 0.2),
+    0 8px 16px -8px hsl(220 33% 12% / 0.1);
+  --shadow-proof: 0 1px 1px hsl(220 33% 12% / 0.06),
+    0 12px 28px -8px hsl(220 33% 12% / 0.16);
 }
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 221.2 83.2% 53.3%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 221.2 83.2% 53.3%;
-  --success: 142.1 76.2% 36.3%;
-  --success-foreground: 0 0% 100%;
-  --warning: 38.9 92.2% 50.2%;
-  --warning-foreground: 0 0% 100%;
+  /* Paper: a cool light-table gray. Deliberately not cream. */
+  --paper: 214 32% 97%;
+  --sheet: 0 0% 100%;
+  --wash: 214 26% 94%;
+  --rule: 214 22% 88%;
+  --rule-strong: 214 18% 78%;
+
+  /* Ink ramp. Contrast on --paper: 15.9:1, 7.2:1, 4.8:1. */
+  --ink: 220 33% 12%;
+  --ink-soft: 219 13% 34%;
+  --ink-faint: 218 12% 44%;
+
+  --signal: 199 95% 30%;
+  --signal-wash: 197 62% 94%;
+  --revise: 328 68% 42%;
+  --revise-wash: 330 56% 95%;
+  --waiting: 32 95% 30%;
+  --waiting-wash: 36 80% 93%;
+  --fault: 358 62% 42%;
+  --fault-wash: 358 60% 96%;
+
+  --seal: 150 34% 93%;
+  --seal-mark: 152 44% 26%;
+
+  --focus: 199 95% 30%;
 }
 
-.dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 217.2 91.2% 59.8%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 224.3 76.3% 48%;
-  --success: 142.1 70.6% 45.3%;
-  --success-foreground: 222.2 47.4% 11.2%;
-  --warning: 38.9 92.2% 50.2%;
-  --warning-foreground: 222.2 47.4% 11.2%;
-}
+/*
+ * There is deliberately no `.dark` block.
+ *
+ * An earlier draft carried a full dark palette that nothing could ever reach —
+ * no toggle, no `prefers-color-scheme` listener, and no route that sets a
+ * `dark` class. Theme tokens that cannot be activated are worse than no theme
+ * tokens, because they read as coverage that does not exist and they drift out
+ * of sync with the light values nobody is looking at.
+ *
+ * Every colour below is a real, referenced token. Dark mode, when it is built,
+ * should be introduced as a deliberate pass over these same names rather than
+ * inherited from a block nobody has ever seen render.
+ */
 
 @layer base {
-  * {
-    border-color: hsl(var(--border));
+  *,
+  ::before,
+  ::after {
+    border-color: hsl(var(--rule));
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    background-color: hsl(var(--paper));
+    color: hsl(var(--ink));
+    font-feature-settings: "cv11", "ss01";
+    font-variant-ligatures: contextual;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* One focus treatment for every interactive element on every screen. */
+  :focus-visible {
+    outline: 2px solid hsl(var(--focus));
+    outline-offset: 2px;
+  }
+
+  /* Focus on a filled control should read as a halo, not a doubled border. */
+  button:focus-visible,
+  [role="button"]:focus-visible {
+    outline-offset: 1px;
+  }
+
+  ::selection {
+    background-color: hsl(var(--signal-wash));
+    color: hsl(var(--ink));
+  }
+
+  /* Tabular figures everywhere numbers are compared down a column. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /*
+   * The slug line.
+   *
+   * Prepress carries a monospaced metadata strip along the foot of a sheet,
+   * and that strip is where a print job stops being an image and becomes a
+   * record. ProofFlow uses it for exactly the same job: the facts that identify
+   * a document rather than decorate it — version numbers, approval IDs, dates,
+   * file facts.
+   *
+   * It is deliberately a run of key/value pairs spread on a baseline, never a
+   * middot-joined string. Joins cost a reader a re-parse; columns do not.
+   */
+  .slug {
+    font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    letter-spacing: -0.005em;
+    font-variant-numeric: tabular-nums;
+    color: hsl(var(--ink-faint));
+  }
+
+  .slug-key {
+    font-family: var(--font-narrow), var(--font-archivo), sans-serif;
+    font-size: 0.6875rem;
+    letter-spacing: 0.07em;
+    color: hsl(var(--ink-faint));
+  }
+
+  /*
+   * Identifier type: the narrow cut, for the short labels that would otherwise
+   * need all-caps to stay legible — table heads, nav, state words.
+   */
+  .label-narrow {
+    font-family: var(--font-narrow), var(--font-archivo), sans-serif;
+    letter-spacing: 0.055em;
+  }
+
+  /* Hanging indent for quoted client notes and change requests. */
+  .note-quote {
+    border-left: 2px solid hsl(var(--revise));
+    padding-left: 0.875rem;
+  }
+}
+
+/*
+ * Motion budget.
+ *
+ * One orchestrated moment exists in this product: the approval seal presses
+ * once when it appears, like a stamp meeting paper. Everything else that moves
+ * answers something the user just did — an overlay opened, a panel lifted, a
+ * toast confirmed. Nothing animates on a timer, and nothing animates because a
+ * section scrolled into view.
+ */
+@keyframes pf-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pf-panel-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 6px)) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes pf-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pf-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The stamp. */
+@keyframes pf-press {
+  from {
+    opacity: 0;
+    transform: scale(1.03);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pf-skeleton {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.animate-overlay-in {
+  animation: pf-overlay-in 150ms ease-out;
+}
+
+.animate-panel-in {
+  animation: pf-panel-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-pop-in {
+  animation: pf-pop-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: var(--radix-popper-transform-origin, center);
+}
+
+.animate-toast-in {
+  animation: pf-toast-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-press {
+  animation: pf-press 380ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.skeleton {
+  background-image: linear-gradient(
+    90deg,
+    hsl(var(--wash)) 0%,
+    hsl(var(--paper)) 45%,
+    hsl(var(--wash)) 90%
+  );
+  background-size: 200% 100%;
+  animation: pf-skeleton 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

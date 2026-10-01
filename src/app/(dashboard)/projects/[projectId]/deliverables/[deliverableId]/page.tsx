@@ -1,19 +1,25 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, LockKeyhole } from "lucide-react";
-import { getAuthenticatedContext } from "@/lib/authz";
+import { requireAuthenticatedContext } from "@/lib/authz";
 import { getDeliverable } from "@/lib/data";
 import { trackEvent } from "@/lib/analytics";
-import { formatDateTime } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { StatusBadge } from "@/components/status-badge";
+import { ROUTES } from "@/lib/routes";
+import {
+  fileTypeLabel,
+  formatBytes,
+  formatDateSlug,
+} from "@/lib/utils";
+import { versionState, type StateKey } from "@/lib/status";
+import { PageHeader, Section } from "@/components/page-header";
+import { StateChip } from "@/components/state-chip";
+import { Plate, PlateBody, PlateHeader, PlateTitle } from "@/components/ui/plate";
+import { EmptyNote } from "@/components/empty-state";
 import { ActivityTimeline } from "@/components/activity-timeline";
-import { CommentItem } from "@/components/comment-item";
-import { FilePreview, FileTypeLabel } from "@/components/file-preview";
+import { FilePreview } from "@/components/file-preview";
 import { VersionUploadForm } from "@/components/version-upload-form";
 import { ReviewLinkButton } from "@/components/review-link-button";
 import { AgencyCommentForm } from "@/components/agency-comment-form";
+import { ApprovalSeal } from "@/components/approval-seal";
+import { RevisionRail, type RailVersion } from "@/components/revision-rail";
 
 export default async function DeliverablePage({
   params,
@@ -21,16 +27,17 @@ export default async function DeliverablePage({
   params: Promise<{ projectId: string; deliverableId: string }>;
 }) {
   const { projectId, deliverableId } = await params;
-  const context = await getAuthenticatedContext();
-  if (!context) return null;
+  const context = await requireAuthenticatedContext();
   const result = await getDeliverable(context, deliverableId);
   if (!result || result.project?.id !== projectId) notFound();
   const { deliverable, project, client, versions, activity } = result;
+
   if (versions.some((version) => version.approval))
     await trackEvent("approval_record_viewed", {
       workspace_id: context.workspaceId,
       deliverable_id: deliverable.id,
     });
+
   const fileUrls = new Map<string, string | null>();
   await Promise.all(
     versions.map(async (version) => {
@@ -41,227 +48,248 @@ export default async function DeliverablePage({
       fileUrls.set(version.id, signed.data?.signedUrl ?? null);
     }),
   );
+
   const currentVersion =
-    versions.find((version) => version.id === deliverable.current_version_id) ||
-    null;
+    versions.find((version) => version.id === deliverable.current_version_id) ?? null;
+
+  const deliverableState = deliverable.status as StateKey;
+
+  const railVersions: RailVersion[] = versions.map((version) => ({
+    id: version.id,
+    version_number: version.version_number,
+    description: version.description,
+    created_at: version.created_at,
+    status: version.status,
+    state: versionState(
+      {
+        id: version.id,
+        version_number: version.version_number,
+        status: version.status,
+        approval: version.approval,
+        comments: version.comments,
+      },
+      deliverable.current_version_id,
+      deliverable.status,
+    ),
+    file: version.file
+      ? {
+          original_filename: version.file.original_filename,
+          mime_type: version.file.mime_type,
+          size_bytes: version.file.size_bytes,
+        }
+      : null,
+    comments: version.comments ?? [],
+    approval: version.approval ?? null,
+  }));
+
+  const approved = railVersions.find((version) => version.state === "APPROVED");
+  const archived = deliverable.status === "ARCHIVED";
+  /**
+   * The link CTA appears while the live version is still in review, because
+   * that is the only window in which sending it does anything. Once a version is
+   * approved the version is locked and a new link would open a closed proof, so
+   * the affordance is withdrawn rather than left there to fail.
+   */
+  const awaitingLink =
+    !archived && currentVersion?.status === "IN_REVIEW" ? currentVersion : null;
 
   return (
-    <div className="space-y-6">
-      <Button asChild variant="ghost" size="sm">
-        <Link href={`/projects/${projectId}`}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {project?.name || "Project"}
-        </Link>
-      </Button>
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            {project?.name} · {client?.name}
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">
-              {deliverable.name}
-            </h1>
-            <StatusBadge status={deliverable.status} />
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {deliverable.description || "No description"}
-          </p>
-        </div>
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Current version</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {currentVersion ? (
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold">
-                        Version {currentVersion.version_number}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Uploaded {formatDateTime(currentVersion.created_at)}
-                      </p>
-                    </div>
-                    <StatusBadge
-                      status={
-                        currentVersion.approval
-                          ? "APPROVED"
-                          : currentVersion.status
-                      }
-                    />
-                  </div>
+    <div className="space-y-8">
+      <PageHeader
+        path={[
+          { label: "Workspace", href: ROUTES.dashboard },
+          { label: "Projects", href: ROUTES.projects },
+          { label: project!.name, href: `/projects/${projectId}` },
+          { label: deliverable.name },
+        ]}
+        title={deliverable.name}
+        slug={[
+          { key: "client", value: client?.name ?? "No client" },
+          { key: "versions", value: versions.length },
+          ...(approved
+            ? [
+                {
+                  key: "approved",
+                  value: `v${approved.version_number}`,
+                  tone: "strong" as const,
+                },
+              ]
+            : []),
+        ]}
+        actions={<StateChip state={deliverableState} size="large" />}
+      />
+
+      {deliverable.description ? (
+        <p className="max-w-prose text-sm leading-relaxed text-ink-soft">
+          {deliverable.description}
+        </p>
+      ) : null}
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <div className="space-y-8">
+          <Section title="Current version">
+            {currentVersion ? (
+              <Plate raised className="overflow-hidden">
+                <PlateHeader>
+                  <PlateTitle>
+                    v{currentVersion.version_number}
+                    {approved?.id === currentVersion.id ? (
+                      <span className="ml-2 font-normal text-ink-faint">
+                        approved
+                      </span>
+                    ) : null}
+                  </PlateTitle>
+                  <span className="slug">
+                    {currentVersion.file
+                      ? `${fileTypeLabel(currentVersion.file.mime_type)} ${formatBytes(currentVersion.file.size_bytes)}`
+                      : "file unavailable"}
+                  </span>
+                </PlateHeader>
+                <PlateBody className="space-y-4">
                   {currentVersion.file ? (
                     <FilePreview
-                      url={fileUrls.get(currentVersion.id) || null}
+                      url={fileUrls.get(currentVersion.id) ?? null}
                       mimeType={currentVersion.file.mime_type}
                       filename={currentVersion.file.original_filename}
                     />
                   ) : (
-                    <p className="text-sm text-destructive">
-                      File is unavailable.
-                    </p>
+                    <EmptyNote>
+                      This version&apos;s file could not be loaded from storage.
+                      The version record and its history are unaffected.
+                    </EmptyNote>
                   )}
+
                   {currentVersion.description ? (
                     <div>
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Description
-                      </p>
-                      <p className="mt-1 whitespace-pre-wrap text-sm">
+                      <p className="slug-key">version note</p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
                         {currentVersion.description}
                       </p>
                     </div>
                   ) : null}
-                  {currentVersion.status === "IN_REVIEW" &&
-                  currentVersion.id === deliverable.current_version_id ? (
-                    <div className="rounded-lg border bg-muted/30 p-4">
-                      <p className="text-sm font-medium">
-                        Ready for client review
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Create a secure link to send this exact version to{" "}
-                        {client?.name || "your client"}.
-                      </p>
-                      <div className="mt-3">
-                        <ReviewLinkButton
-                          workspaceId={context.workspaceId}
-                          versionId={currentVersion.id}
-                        />
-                      </div>
+                </PlateBody>
+              </Plate>
+            ) : (
+              <EmptyNote>
+                No version has been uploaded yet. Upload version 1 to start the
+                review.
+              </EmptyNote>
+            )}
+          </Section>
+
+          {awaitingLink ? (
+            <Plate accentTop>
+              <PlateBody className="space-y-3">
+                <div>
+                  <h2 className="text-sm font-medium text-ink">
+                    Send this version to {client?.name ?? "your client"}
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+                    The link opens version {awaitingLink.version_number} and
+                    nothing else. Your client approves or comments without
+                    creating an account.
+                  </p>
+                </div>
+                <ReviewLinkButton
+                  workspaceId={context.workspaceId}
+                  versionId={awaitingLink.id}
+                  clientName={client?.name}
+                />
+              </PlateBody>
+            </Plate>
+          ) : null}
+
+          <Section
+            title="Revisions"
+            slug={[
+              { key: "total", value: versions.length },
+              ...(approved
+                ? [
+                    {
+                      key: "approved",
+                      value: `v${approved.version_number} ${formatDateSlug(approved.approval?.approved_at)}`,
+                      tone: "strong" as const,
+                    },
+                  ]
+                : []),
+            ]}
+          >
+            {versions.length ? (
+              <RevisionRail
+                versions={railVersions}
+                currentVersionId={deliverable.current_version_id}
+              >
+                {(version) =>
+                  version.id === deliverable.current_version_id &&
+                  version.state === "IN_REVIEW" ? (
+                    <div className="pt-1">
+                      <AgencyCommentForm
+                        workspaceId={context.workspaceId}
+                        versionId={version.id}
+                      />
                     </div>
-                  ) : null}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Upload the first version to start a review.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Version history</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {versions.length ? (
-                <div className="space-y-6">
-                  {versions.map((version) => (
-                    <article key={version.id} className="rounded-lg border p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <h2 className="font-semibold">
-                            Version {version.version_number}
-                          </h2>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {formatDateTime(version.created_at)} ·{" "}
-                            {version.file ? (
-                              <FileTypeLabel
-                                mimeType={version.file.mime_type}
-                              />
-                            ) : (
-                              "File unavailable"
-                            )}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {version.approval ? (
-                            <LockKeyhole
-                              className="h-4 w-4 text-green-600"
-                              aria-label="Locked"
-                            />
-                          ) : null}
-                          <StatusBadge
-                            status={
-                              version.approval ? "APPROVED" : version.status
-                            }
-                          />
-                        </div>
-                      </div>
-                      {version.description ? (
-                        <p className="mt-3 whitespace-pre-wrap text-sm">
-                          {version.description}
-                        </p>
-                      ) : null}
-                      {version.comments?.length ? (
-                        <div className="mt-4 space-y-2">
-                          <p className="text-xs font-medium text-muted-foreground">
-                            Comments
-                          </p>
-                          {version.comments.map((comment) => (
-                            <CommentItem key={comment.id} comment={comment} />
-                          ))}
-                        </div>
-                      ) : null}
-                      {version.approval ? (
-                        <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
-                          <p className="font-semibold">
-                            Approved by {version.approval.client_name}
-                          </p>
-                          <p className="mt-1">
-                            {version.approval.client_email} ·{" "}
-                            {formatDateTime(version.approval.approved_at)}
-                          </p>
-                          <p className="mt-1 font-mono text-xs">
-                            {version.approval.approval_number}
-                          </p>
-                          <p className="mt-2 text-xs">
-                            This version is locked because it was approved.
-                          </p>
-                        </div>
-                      ) : null}
-                      {version.id === deliverable.current_version_id &&
-                      version.status === "IN_REVIEW" ? (
-                        <div className="mt-4 border-t pt-4">
-                          <p className="mb-2 text-xs font-medium text-muted-foreground">
-                            Reply as agency
-                          </p>
-                          <AgencyCommentForm
-                            workspaceId={context.workspaceId}
-                            versionId={version.id}
-                          />
-                        </div>
-                      ) : null}
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  No versions uploaded yet.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+                  ) : null
+                }
+              </RevisionRail>
+            ) : (
+              <EmptyNote>
+                No revisions yet. Each upload adds a numbered round to this rail.
+              </EmptyNote>
+            )}
+          </Section>
         </div>
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Upload version</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {deliverable.status === "ARCHIVED" ? (
-                <p className="text-sm text-muted-foreground">
-                  Archived deliverables cannot receive new versions.
-                </p>
-              ) : (
+
+        <div className="space-y-5">
+          {approved?.approval ? (
+            <ApprovalSeal
+              approval={approved.approval}
+              deliverableName={deliverable.name}
+              versionNumber={approved.version_number}
+              projectName={project?.name}
+            />
+          ) : null}
+
+          {deliverable.status === "APPROVED" && !approved ? (
+            <EmptyNote>
+              This deliverable is marked approved but no approval record was
+              found. Contact support before relying on it.
+            </EmptyNote>
+          ) : null}
+
+          {deliverable.status === "CHANGES_REQUESTED" ? (
+            <EmptyNote>
+              {client?.name ?? "The client"} asked for changes. Upload the next
+              version when it is ready, then send a new review link.
+            </EmptyNote>
+          ) : null}
+
+          {archived ? (
+            <EmptyNote>
+              This deliverable is archived. It keeps its history and approval
+              record, and accepts no new versions.
+            </EmptyNote>
+          ) : (
+            <Plate>
+              <PlateHeader>
+                <PlateTitle>Upload a version</PlateTitle>
+              </PlateHeader>
+              <PlateBody>
                 <VersionUploadForm
                   workspaceId={context.workspaceId}
                   deliverableId={deliverable.id}
                 />
-              )}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
+              </PlateBody>
+            </Plate>
+          )}
+
+          <Plate>
+            <PlateHeader>
+              <PlateTitle>Activity</PlateTitle>
+            </PlateHeader>
+            <PlateBody>
               <ActivityTimeline events={activity} />
-            </CardContent>
-          </Card>
+            </PlateBody>
+          </Plate>
         </div>
       </div>
     </div>

@@ -7,15 +7,7 @@ import { login } from "@/actions/auth";
 import { ROUTES } from "@/lib/routes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Field, FormError } from "@/components/ui/field";
 
 export function LoginForm({
   message,
@@ -48,71 +40,86 @@ export function LoginForm({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Welcome back</CardTitle>
-        <CardDescription>Sign in to manage client approvals.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {message ? (
-          <p className="mb-4 rounded-md bg-green-50 p-3 text-sm text-green-700">
-            {message}
-          </p>
-        ) : null}
-        <form onSubmit={submit} className="space-y-4">
-          {error ? (
-            <p
-              role="alert"
-              className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-            >
-              {error}
-            </p>
-          ) : null}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em] text-ink">
+          Sign in
+        </h1>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+          Sign in to send review links and collect approvals.
+        </p>
+      </div>
+
+      {message ? (
+        <p
+          role="status"
+          className="rounded-control bg-seal px-3 py-2.5 text-sm leading-relaxed text-ink"
+        >
+          {message}
+        </p>
+      ) : null}
+
+      <form onSubmit={submit} className="space-y-5">
+        {error ? <FormError>{error}</FormError> : null}
+
+        <Field label="Email" required>
+          {({ id }) => (
             <Input
-              id="email"
+              id={id}
               type="email"
               autoComplete="email"
+              autoFocus
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              placeholder="you@studio.com"
               required
               disabled={loading}
+              invalid={Boolean(error)}
             />
+          )}
+        </Field>
+
+        <div className="space-y-1.5">
+          <div className="flex items-baseline justify-between gap-4">
+            <label
+              htmlFor="password"
+              className="label-narrow text-xs font-medium text-ink-soft"
+            >
+              Password
+            </label>
+            <Link
+              href={ROUTES.forgotPassword}
+              className="text-xs text-signal underline-offset-4 hover:underline"
+            >
+              Forgot password
+            </Link>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                href={ROUTES.forgotPassword}
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              disabled={loading}
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
-          </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="justify-center">
-        <p className="text-sm text-muted-foreground">
-          Need an account?{" "}
-          <Link href={ROUTES.signup} className="text-primary hover:underline">
-            Sign up
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            disabled={loading}
+            invalid={Boolean(error)}
+          />
+        </div>
+
+        <Button type="submit" block disabled={loading}>
+          {loading ? "Signing in" : "Sign in"}
+        </Button>
+      </form>
+
+      <p className="text-sm text-ink-soft">
+        No account yet?{" "}
+        <Link
+          href={ROUTES.signup}
+          className="text-signal underline-offset-4 hover:underline"
+        >
+          Create a workspace
+        </Link>
+      </p>
+    </div>
   );
 }

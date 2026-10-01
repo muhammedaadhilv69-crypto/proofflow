@@ -1,6 +1,11 @@
-import { getAuthenticatedContext } from "@/lib/authz";
+import { requireAuthenticatedContext } from "@/lib/authz";
 import { listInvitations, listMembers } from "@/lib/team";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ROUTES } from "@/lib/routes";
+import { formatDateSlug } from "@/lib/utils";
+import { roleLabel } from "@/lib/status";
+import { PageHeader } from "@/components/page-header";
+import { Plate, PlateBody, PlateHeader, PlateTitle } from "@/components/ui/plate";
+import { EmptyNote } from "@/components/empty-state";
 import { WorkspaceSettingsForm } from "@/components/workspace-settings-form";
 import { InviteMemberForm } from "@/components/invite-member-form";
 import { TeamManager } from "@/components/team-manager";
@@ -16,49 +21,97 @@ function invitationStatus(invitation: {
   return "PENDING";
 }
 
+/**
+ * Settings.
+ *
+ * The account panel comes first even though it is the smallest, because it is
+ * the thing a signed-in person is most often looking for and it costs them
+ * nothing to read. Workspace and team follow.
+ */
 export default async function SettingsPage() {
-  const context = await getAuthenticatedContext();
-  if (!context) return null;
-
+  const context = await requireAuthenticatedContext();
   const canManage = context.role === "OWNER";
+
   const [members, invitations] = await Promise.all([
     listMembers(context),
     listInvitations(context),
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <p className="text-sm text-muted-foreground">Account</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight">Settings</h1>
-      </div>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <PageHeader
+        path={[
+          { label: "Workspace", href: ROUTES.dashboard },
+          { label: "Settings" },
+        ]}
+        title="Settings"
+        slug={[
+          { key: "workspace", value: context.workspace.name },
+          { key: "your role", value: roleLabel(context.role) },
+        ]}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Workspace</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Plate>
+        <PlateHeader>
+          <PlateTitle>Your account</PlateTitle>
+        </PlateHeader>
+        <PlateBody>
+          <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-[8rem_1fr]">
+            <dt className="slug-key pt-0.5">email</dt>
+            <dd className="font-mono text-sm text-ink">
+              {context.user.email ?? "Not set"}
+            </dd>
+            <dt className="slug-key pt-0.5">role</dt>
+            <dd className="text-sm text-ink-soft">
+              {roleLabel(context.role)}
+              {context.role === "OWNER"
+                ? " — you can manage the workspace and invite teammates."
+                : " — you can manage projects, deliverables, and versions."}
+            </dd>
+            <dt className="slug-key pt-0.5">member since</dt>
+            <dd className="font-mono text-sm tabular-nums text-ink-soft">
+              {formatDateSlug(
+                members.find((member) => member.user_id === context.user.id)
+                  ?.created_at ?? context.user.created_at,
+              )}
+            </dd>
+          </dl>
+          {!canManage ? (
+            <p className="mt-4">
+              <EmptyNote>
+                Only the workspace owner can rename the workspace, invite
+                teammates, or change roles.
+              </EmptyNote>
+            </p>
+          ) : null}
+        </PlateBody>
+      </Plate>
+
+      <Plate>
+        <PlateHeader>
+          <PlateTitle>Workspace</PlateTitle>
+          <span className="slug">{context.workspace.slug}</span>
+        </PlateHeader>
+        <PlateBody>
           <WorkspaceSettingsForm
             workspaceId={context.workspaceId}
             name={context.workspace.name}
             canEdit={canManage}
           />
-        </CardContent>
-      </Card>
+        </PlateBody>
+      </Plate>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Team</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <Plate>
+        <PlateHeader>
+          <PlateTitle>Team</PlateTitle>
+          <span className="slug">
+            {members.length} {members.length === 1 ? "member" : "members"}
+          </span>
+        </PlateHeader>
+        <PlateBody className="space-y-8">
           {canManage ? (
             <InviteMemberForm workspaceId={context.workspaceId} />
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Only the workspace owner can invite teammates.
-            </p>
-          )}
-
+          ) : null}
           <TeamManager
             workspaceId={context.workspaceId}
             canManage={canManage}
@@ -77,26 +130,8 @@ export default async function SettingsPage() {
               status: invitationStatus(invitation),
             }))}
           />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Account</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="space-y-3 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Email</dt>
-              <dd>{context.user.email}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted-foreground">Role</dt>
-              <dd>{context.role.toLowerCase()}</dd>
-            </div>
-          </dl>
-        </CardContent>
-      </Card>
+        </PlateBody>
+      </Plate>
     </div>
   );
 }

@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { Button } from "@/components/ui/button";
 import { ErrorBlock } from "@/components/feedback";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardError({
   error,
@@ -17,9 +17,23 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="mx-auto max-w-xl space-y-4 py-12">
-      <ErrorBlock message="ProofFlow could not load this workspace. Check your connection and try again." />
-      <Button onClick={() => reset()}>Try again</Button>
+    <div className="mx-auto max-w-lg py-6">
+      <ErrorBlock
+        title="This page did not load"
+        action={{ label: "Try again", onClick: () => reset() }}
+      >
+        Nothing in your workspace has changed. The page failed while it was
+        loading, which is usually temporary — try again, and if it keeps
+        happening the reference below will identify it.
+      </ErrorBlock>
+      {error.digest ? (
+        <p className="slug mt-3">reference {error.digest}</p>
+      ) : null}
+      <div className="mt-4">
+        <Button asChild variant="ghost" size="sm">
+          <a href="/dashboard">Go to the dashboard</a>
+        </Button>
+      </div>
     </div>
   );
 }

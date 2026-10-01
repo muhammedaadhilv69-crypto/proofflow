@@ -1,132 +1,139 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { getAuthenticatedContext } from "@/lib/authz";
+import { requireAuthenticatedContext } from "@/lib/authz";
 import { getProject } from "@/lib/data";
-import { formatDate } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/components/status-badge";
+import { ROUTES } from "@/lib/routes";
+import { formatDateSlug } from "@/lib/utils";
+import { PageHeader, Section } from "@/components/page-header";
+import { StateChip, StateMark } from "@/components/state-chip";
+import { Plate, PlateBody } from "@/components/ui/plate";
+import { EmptyNote, EmptyState } from "@/components/empty-state";
 import { ActivityTimeline } from "@/components/activity-timeline";
 import { DeliverableForm } from "@/components/deliverable-form";
 import { ProjectStatusForm } from "@/components/project-status-form";
 import { ProjectEditForm } from "@/components/project-edit-form";
 
+/**
+ * Project → Deliverables → Versions → Reviews, in that order and no other.
+ *
+ * The deliverables table is the page's centre of gravity, so it gets the width
+ * and the column rule; the two forms that create things sit in the sidebar,
+ * under the list they add to, rather than competing with it for attention.
+ */
 export default async function ProjectPage({
   params,
 }: {
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const context = await getAuthenticatedContext();
-  if (!context) return null;
+  const context = await requireAuthenticatedContext();
   const result = await getProject(context, projectId);
   if (!result) notFound();
   const { project, client, deliverables, activity } = result;
 
   return (
-    <div className="space-y-6">
-      <Button asChild variant="ghost" size="sm">
-        <Link href="/projects">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Projects
-        </Link>
-      </Button>
-      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">
-              {project.name}
-            </h1>
-            <StatusBadge status={project.status} />
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {client?.name || "No client"}
-            {client?.email ? ` · ${client.email}` : ""}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {project.description || "No project description"}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="text-sm">
-            <p className="text-xs text-muted-foreground">Due date</p>
-            <p className="mt-1 font-medium">{formatDate(project.due_date)}</p>
-          </div>
+    <div className="space-y-8">
+      <PageHeader
+        path={[
+          { label: "Workspace", href: ROUTES.dashboard },
+          { label: "Projects", href: ROUTES.projects },
+          { label: project.name },
+        ]}
+        title={project.name}
+        slug={[
+          { key: "client", value: client?.name ?? "No client" },
+          { key: "due", value: formatDateSlug(project.due_date) },
+          { key: "deliverables", value: deliverables.length },
+        ]}
+        actions={
           <ProjectStatusForm
             workspaceId={context.workspaceId}
             projectId={project.id}
             status={project.status}
           />
-        </div>
-      </div>
-      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Deliverables</CardTitle>
-          </CardHeader>
-          <CardContent>
+        }
+      />
+
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_21rem]">
+        <div className="space-y-8">
+          <Section
+            title="Deliverables"
+            slug={[{ key: "total", value: deliverables.length }]}
+          >
             {deliverables.length ? (
-              <div className="divide-y">
-                {deliverables.map((deliverable) => (
-                  <Link
-                    key={deliverable.id}
-                    href={`/projects/${project.id}/deliverables/${deliverable.id}`}
-                    className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0 hover:text-primary"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{deliverable.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {deliverable.current_version_id
-                          ? "Version history available"
-                          : "No version uploaded yet"}
-                      </p>
-                    </div>
-                    <StatusBadge status={deliverable.status} />
-                  </Link>
-                ))}
-              </div>
+              <Plate>
+                <ul className="divide-y divide-rule">
+                  {deliverables.map((deliverable) => (
+                    <li key={deliverable.id}>
+                      <Link
+                        href={`/projects/${project.id}/deliverables/${deliverable.id}`}
+                        className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors hover:bg-wash"
+                      >
+                        <StateMark state={deliverable.status} className="size-2" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-ink">
+                            {deliverable.name}
+                          </span>
+                          <span className="slug block truncate">
+                            {deliverable.current_version_id
+                              ? "has version history"
+                              : "no version uploaded"}
+                          </span>
+                        </span>
+                        <StateChip state={deliverable.status} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </Plate>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No deliverables yet. Add the first one to start collecting
-                approvals.
-              </p>
+              <EmptyState
+                title="No deliverables yet"
+                description="A deliverable is one thing the client approves, such as a set of social images or a homepage design. Each one keeps its own versions and approval record."
+                nextStep="add a deliverable using the form beside this list"
+              />
             )}
-          </CardContent>
-        </Card>
-        <div className="space-y-6">
+          </Section>
+
+          <Section title="Activity">
+            <Plate>
+              <PlateBody>
+                <ActivityTimeline events={activity} />
+              </PlateBody>
+            </Plate>
+          </Section>
+        </div>
+
+        <div className="space-y-5">
           {project.status !== "ARCHIVED" ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Add deliverable</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <Plate accentTop>
+              <PlateBody className="space-y-3">
+                <h2 className="label-narrow text-xs font-medium text-ink">
+                  Add deliverable
+                </h2>
                 <DeliverableForm
                   workspaceId={context.workspaceId}
                   projectId={project.id}
                 />
-              </CardContent>
-            </Card>
-          ) : null}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Edit project</CardTitle>
-            </CardHeader>
-            <CardContent>
+              </PlateBody>
+            </Plate>
+          ) : (
+            <EmptyNote>
+              This project is archived, so it no longer accepts new deliverables.
+            </EmptyNote>
+          )}
+
+          <Plate>
+            <PlateBody className="space-y-3">
+              <h2 className="label-narrow text-xs font-medium text-ink">
+                Project details
+              </h2>
               <ProjectEditForm
                 workspaceId={context.workspaceId}
                 project={project}
               />
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ActivityTimeline events={activity} />
-            </CardContent>
-          </Card>
+            </PlateBody>
+          </Plate>
         </div>
       </div>
     </div>

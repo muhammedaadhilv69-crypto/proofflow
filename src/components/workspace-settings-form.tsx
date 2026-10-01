@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { updateWorkspaceAction } from "@/actions/workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field, FormError } from "@/components/ui/field";
 
 export function WorkspaceSettingsForm({
   workspaceId,
@@ -18,61 +19,63 @@ export function WorkspaceSettingsForm({
 }) {
   const router = useRouter();
   const [value, setValue] = useState(name);
-  const [message, setMessage] = useState("");
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const dirty = value.trim() !== name;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setMessage("");
+    setSaved(false);
     setError("");
     const data = new FormData();
     data.set("workspaceId", workspaceId);
     data.set("name", value);
     const result = await updateWorkspaceAction(data);
     if (result && "error" in result && result.error) setError(result.error);
-    else setMessage("Settings saved");
+    else setSaved(true);
     setLoading(false);
     router.refresh();
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {message ? (
+      {error ? <FormError>{error}</FormError> : null}
+      {saved ? (
         <p
           role="status"
-          className="rounded-md bg-green-50 p-3 text-sm text-green-700"
+          className="flex items-center gap-1.5 text-sm text-ink-soft"
         >
-          {message}
+          <Check aria-hidden="true" className="size-4 text-seal-mark" />
+          Workspace renamed.
         </p>
       ) : null}
-      {error ? (
-        <p
-          role="alert"
-          className="rounded-md bg-destructive/10 p-3 text-sm text-destructive"
-        >
-          {error}
-        </p>
-      ) : null}
-      <div className="space-y-2">
-        <Label htmlFor="workspace-name">Workspace name</Label>
-        <Input
-          id="workspace-name"
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          disabled={!canEdit || loading}
-        />
-      </div>
-      {!canEdit ? (
-        <p className="text-sm text-muted-foreground">
-          Only the workspace owner can change these settings.
-        </p>
-      ) : (
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Save settings"}
+
+      <Field
+        label="Workspace name"
+        hint="Shown to your team and used in the review links you send."
+      >
+        {({ id, describedBy }) => (
+          <Input
+            id={id}
+            aria-describedby={describedBy}
+            value={value}
+            onChange={(event) => {
+              setValue(event.target.value);
+              setSaved(false);
+            }}
+            disabled={!canEdit || loading}
+          />
+        )}
+      </Field>
+
+      {canEdit ? (
+        <Button type="submit" disabled={loading || !dirty || !value.trim()}>
+          {loading ? "Saving" : "Save name"}
         </Button>
-      )}
+      ) : null}
     </form>
   );
 }

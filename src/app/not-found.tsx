@@ -1,26 +1,35 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/routes";
+import { Wordmark } from "@/components/wordmark";
+import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md space-y-6 rounded-xl border bg-background p-8 text-center shadow-sm">
-        <p className="text-sm font-semibold text-primary">ProofFlow</p>
-        <h1 className="text-2xl font-bold">Page not found</h1>
-        <p className="text-sm text-muted-foreground">
-          That page does not exist or has moved. If you followed a review link, ask
-          the agency to send you a new one.
-        </p>
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <Button asChild>
-            <Link href={ROUTES.home}>Go home</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={ROUTES.login}>Sign in</Link>
-          </Button>
+    <div className="flex min-h-screen flex-col bg-paper">
+      <header className="border-b border-rule bg-sheet">
+        <div className="mx-auto flex max-w-6xl items-center px-4 py-4 sm:px-6">
+          <Wordmark />
         </div>
-      </div>
-    </main>
+      </header>
+      <main className="mx-auto flex w-full max-w-6xl flex-1 items-center px-4 py-16 sm:px-6">
+        <div className="max-w-md">
+          <p className="slug">error 404</p>
+          <h1 className="mt-3 text-3xl font-semibold tracking-[-0.02em] text-ink">
+            This page does not exist
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            The address may be mistyped, or the page may have moved. If you
+            followed a review link, ask the agency to send you a new one.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button asChild>
+              <a href={ROUTES.home}>Go home</a>
+            </Button>
+            <Button asChild variant="outline">
+              <a href={ROUTES.login}>Sign in</a>
+            </Button>
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
