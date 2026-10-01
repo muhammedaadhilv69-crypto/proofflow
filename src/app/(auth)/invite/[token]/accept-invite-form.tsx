@@ -43,7 +43,7 @@ export function AcceptInviteForm({
           No account yet?{" "}
           <Link
             href="/signup"
-            className="text-signal underline-offset-4 hover:underline"
+            className="link-inline"
           >
             Create one
           </Link>{" "}

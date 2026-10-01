@@ -9,7 +9,7 @@ import { LoadingRegion } from "@/components/ui/skeleton";
  */
 export default function ReviewLoading() {
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="skeleton-screen min-h-screen bg-paper">
       <LoadingRegion label="Loading the review" />
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         <div className="space-y-2">

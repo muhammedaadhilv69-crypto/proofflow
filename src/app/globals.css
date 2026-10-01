@@ -65,10 +65,11 @@
   --color-seal-mark: hsl(var(--seal-mark));
 
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
-  --font-narrow: var(--font-archivo-narrow), var(--font-archivo), ui-sans-serif,
-    system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo,
-    monospace;
+  --font-narrow:
+    var(--font-archivo-narrow), var(--font-archivo), ui-sans-serif, system-ui,
+    sans-serif;
+  --font-mono:
+    var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /*
    * Three radii, each tied to a role rather than applied as one house value.
@@ -83,13 +84,15 @@
    * `--shadow-proof` because it stands for a sheet of paper resting on a light
    * table; everything else is interface chrome and barely casts one.
    */
-  --shadow-sheet: 0 1px 2px hsl(220 33% 12% / 0.04);
-  --shadow-lift: 0 6px 20px -6px hsl(220 33% 12% / 0.12),
+  --shadow-sheet: 0 1px 2px hsl(220 33% 12% / 0.1);
+  --shadow-lift:
+    0 6px 20px -6px hsl(220 33% 12% / 0.12),
     0 2px 6px -2px hsl(220 33% 12% / 0.06);
-  --shadow-overlay: 0 24px 48px -12px hsl(220 33% 12% / 0.2),
+  --shadow-overlay:
+    0 24px 48px -12px hsl(220 33% 12% / 0.2),
     0 8px 16px -8px hsl(220 33% 12% / 0.1);
-  --shadow-proof: 0 1px 1px hsl(220 33% 12% / 0.06),
-    0 12px 28px -8px hsl(220 33% 12% / 0.16);
+  --shadow-proof:
+    0 1px 1px hsl(220 33% 12% / 0.06), 0 12px 28px -8px hsl(220 33% 12% / 0.16);
 }
 
 :root {
@@ -153,6 +156,12 @@
     text-rendering: optimizeLegibility;
   }
 
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
   /* One focus treatment for every interactive element on every screen. */
   :focus-visible {
     outline: 2px solid hsl(var(--focus));
@@ -191,7 +200,8 @@
    * middot-joined string. Joins cost a reader a re-parse; columns do not.
    */
   .slug {
-    font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family:
+      var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.75rem;
     line-height: 1.35;
     letter-spacing: -0.005em;
@@ -220,6 +230,44 @@
     border-left: 2px solid hsl(var(--revise));
     padding-left: 0.875rem;
   }
+
+  /*
+   * A link inside a sentence.
+   *
+   * These were previously distinguished by hue alone, and signal cyan against
+   * the soft ink it sits beside is 1.24:1 — indistinguishable to anyone who
+   * cannot separate those two colours, which is a WCAG 1.4.1 failure. Note that
+   * this is not the usual link-on-background contrast question: the link passes
+   * handily against the paper. It fails against the *neighbouring words*.
+   *
+   * So the underline is the cue that carries the meaning, not the colour. It is
+   * faint at rest and firms up on hover, which keeps a paragraph of them from
+   * turning into a page of rules.
+   */
+  .link-inline {
+    color: hsl(var(--signal));
+    text-decoration: underline;
+    text-decoration-color: hsl(var(--signal) / 0.45);
+    text-underline-offset: 0.25rem;
+  }
+
+  .link-inline:hover {
+    text-decoration-color: hsl(var(--signal));
+  }
+}
+
+/*
+ * Bottom padding that clears the iOS home indicator.
+ *
+ * Tailwind v4 ships no safe-area utilities, so `pb-safe` compiled to nothing and
+ * the review page's fixed action bar sat under the indicator. Declaring it here
+ * is the fix; the 0.75rem is deliberately the same as the `pt-3` that pairs with
+ * it, because the inset has to be *added* to the bar's own padding rather than
+ * replace it — an element carrying both `py-3` and `pb-safe` loses its bottom
+ * padding entirely, since both utilities set the same property.
+ */
+@utility pb-safe {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 /*
@@ -324,6 +372,26 @@
   );
   background-size: 200% 100%;
   animation: pf-skeleton 1.6s linear infinite;
+}
+
+/*
+ * A skeleton screen holds its paint until the wait is worth showing.
+ *
+ * A skeleton that is up for 40ms on a warm cache reads as a flash, not as
+ * progress, so the bar stays hidden for the first 200ms. `visibility` rather
+ * than a conditional render, because the space has to be reserved: revealing a
+ * bar must not shift the page. That matters most on the review page, where the
+ * box the proof occupies sits directly above the approve button.
+ */
+.skeleton-screen {
+  visibility: hidden;
+  animation: pf-skeleton-screen-in 1ms linear 200ms forwards;
+}
+
+@keyframes pf-skeleton-screen-in {
+  to {
+    visibility: visible;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

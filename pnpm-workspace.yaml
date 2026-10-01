@@ -1,3 +1,9 @@
+supportedArchitectures:
+  os:
+    - win32
+  cpu:
+    - x64
+
 allowBuilds:
   esbuild: true
   unrs-resolver: true

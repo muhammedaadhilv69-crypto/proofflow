@@ -240,7 +240,7 @@ export function ReviewClient({ data }: { data: ReviewData }) {
       </main>
 
       {data.canAct ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-rule bg-sheet/95 px-4 py-3 backdrop-blur sm:static sm:mt-10 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-rule bg-sheet/95 px-4 pt-3 pb-safe backdrop-blur sm:static sm:mt-10 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-0 sm:pb-0 sm:backdrop-blur-none">
           <div className="mx-auto max-w-3xl sm:px-6">
             <div className="mx-auto max-w-xl rounded-sheet border border-rule bg-sheet px-4 py-3.5 shadow-lift sm:border-none sm:bg-transparent sm:p-0 sm:shadow-none">
               <p className="text-sm leading-relaxed text-ink-soft">

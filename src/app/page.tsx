@@ -157,6 +157,16 @@ export default function MarketingPage() {
               </p>
             </div>
 
+            {/*
+              The demo column is a worked example, and the seal inside it is an
+              `<h3>` because that is its level on a real page. Under the hero's
+              `<h1>` that skipped a level, so the column gets a heading of its own
+              — which is also the only thing telling a screen reader that the rail
+              and the seal below it are an illustration rather than live data.
+            */}
+            <h2 className="sr-only">
+              Example: four rounds of review and the approval record they produced
+            </h2>
             <div className="min-w-0 space-y-6">
               <div className="rounded-sheet border border-rule bg-sheet p-5 shadow-sheet">
                 <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">

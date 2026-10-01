@@ -77,7 +77,7 @@ export default async function ClientDetailPage({
               <PlateBody>
                 <EmptyNote>
                   No projects for {client.name} yet.{" "}
-                  <Link href="/projects/new" className="text-signal underline-offset-4 hover:underline">
+                  <Link href="/projects/new" className="link-inline">
                     Create one
                   </Link>{" "}
                   to start collecting approvals from them.

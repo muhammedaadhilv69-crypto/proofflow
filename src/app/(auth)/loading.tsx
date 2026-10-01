@@ -7,7 +7,7 @@ import { LoadingRegion } from "@/components/ui/skeleton";
  */
 export default function AuthLoading() {
   return (
-    <div className="space-y-6">
+    <div className="skeleton-screen space-y-6">
       <LoadingRegion label="Loading" />
       <div className="space-y-2" aria-hidden="true">
         <Skeleton className="h-7 w-40" />

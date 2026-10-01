@@ -140,7 +140,7 @@ export function SignupForm() {
         Already have an account?{" "}
         <Link
           href={ROUTES.login}
-          className="text-signal underline-offset-4 hover:underline"
+          className="link-inline"
         >
           Sign in
         </Link>

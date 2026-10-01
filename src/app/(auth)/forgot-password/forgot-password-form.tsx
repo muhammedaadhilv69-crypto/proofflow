@@ -74,7 +74,7 @@ export function ForgotPasswordForm() {
       <p className="text-sm">
         <Link
           href={ROUTES.login}
-          className="text-signal underline-offset-4 hover:underline"
+          className="link-inline"
         >
           Back to sign in
         </Link>

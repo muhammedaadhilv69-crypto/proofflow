@@ -187,7 +187,15 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-rule bg-paper/95 px-4 backdrop-blur lg:hidden">
+        {/*
+          A `<header>`, not a `<div>`. This bar is a sibling of `<main>`, so
+          while it was a plain div the wordmark and the workspace name sat
+          outside every landmark — invisible to the desktop audit only because
+          the bar is `lg:hidden`. The page's own PageHeader is a `<header>` too,
+          but it lives inside `<main>`, so it carries no banner role and the two
+          do not collide.
+        */}
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-rule bg-paper/95 px-4 backdrop-blur lg:hidden">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -204,7 +212,7 @@ export function AppShell({
           </Button>
           <Wordmark href={dashboardHref} />
           <p className="slug ml-auto max-w-32 truncate">{workspaceName}</p>
-        </div>
+        </header>
 
         {open ? (
           <div

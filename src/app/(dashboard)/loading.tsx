@@ -7,7 +7,7 @@ import { SkeletonHeader, SkeletonRow, LoadingRegion } from "@/components/ui/skel
  */
 export default function DashboardLoading() {
   return (
-    <div className="space-y-8">
+    <div className="skeleton-screen space-y-8">
       <LoadingRegion label="Loading your workspace" />
       <SkeletonHeader />
       <div className="space-y-8">

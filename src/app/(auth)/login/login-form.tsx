@@ -89,7 +89,7 @@ export function LoginForm({
             </label>
             <Link
               href={ROUTES.forgotPassword}
-              className="text-xs text-signal underline-offset-4 hover:underline"
+              className="link-inline text-xs"
             >
               Forgot password
             </Link>
@@ -115,7 +115,7 @@ export function LoginForm({
         No account yet?{" "}
         <Link
           href={ROUTES.signup}
-          className="text-signal underline-offset-4 hover:underline"
+          className="link-inline"
         >
           Create a workspace
         </Link>
