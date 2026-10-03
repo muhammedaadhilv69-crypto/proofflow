@@ -101,7 +101,7 @@ export function VersionUploadForm({
               }}
               onDragLeave={() => setDragging(false)}
               onDrop={drop}
-              className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-control border border-dashed px-3 py-5 text-center transition-colors ${
+              className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-field border border-dashed px-6 py-8 text-center transition-colors ${
                 dragging
                   ? "border-signal bg-signal-wash"
                   : "border-rule-strong bg-sheet hover:border-ink-faint"

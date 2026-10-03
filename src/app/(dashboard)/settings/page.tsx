@@ -9,6 +9,7 @@ import { EmptyNote } from "@/components/empty-state";
 import { WorkspaceSettingsForm } from "@/components/workspace-settings-form";
 import { InviteMemberForm } from "@/components/invite-member-form";
 import { TeamManager } from "@/components/team-manager";
+import { ThemePicker } from "@/components/theme-toggle";
 
 function invitationStatus(invitation: {
   accepted_at: string | null;
@@ -26,7 +27,9 @@ function invitationStatus(invitation: {
  *
  * The account panel comes first even though it is the smallest, because it is
  * the thing a signed-in person is most often looking for and it costs them
- * nothing to read. Workspace and team follow.
+ * nothing to read. Appearance sits inside that panel rather than beside it,
+ * because it is the other half of the same question — who is this and how do you
+ * want to look. Workspace and team follow.
  */
 export default async function SettingsPage() {
   const context = await requireAuthenticatedContext();
@@ -76,6 +79,15 @@ export default async function SettingsPage() {
               )}
             </dd>
           </dl>
+          {/*
+            A rule, then the appearance control, on the same key/value baseline as
+            the facts above rather than in a panel of its own. Three lines of slug
+            and one row of pills is a settings row; a second plate with a heading
+            and a description would be a second thing to read.
+          */}
+          <div className="mt-6 border-t border-rule/70 pt-5">
+            <ThemePicker />
+          </div>
           {!canManage ? (
             <p className="mt-4">
               <EmptyNote>

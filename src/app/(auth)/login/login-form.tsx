@@ -53,7 +53,7 @@ export function LoginForm({
       {message ? (
         <p
           role="status"
-          className="rounded-control bg-seal px-3 py-2.5 text-sm leading-relaxed text-ink"
+          className="rounded-field bg-signal-wash px-4 py-3 text-sm leading-relaxed text-ink"
         >
           {message}
         </p>

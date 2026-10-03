@@ -36,25 +36,23 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-sheet border border-dashed border-rule-strong bg-sheet px-6 py-10 sm:px-10 sm:py-12",
+        "relative overflow-hidden rounded-sheet border border-dashed border-rule-strong bg-wash p-8 sm:p-12",
         className,
       )}
     >
-      <RegistrationCorners className="text-ink" inset={12} />
+      <RegistrationCorners className="text-ink-faint" inset={12} />
       <div className="max-w-md">
-        <h2 className="text-base font-semibold tracking-[-0.01em] text-ink">
-          {title}
-        </h2>
-        <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+        <h2 className="text-lg font-semibold text-ink">{title}</h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-soft">
           {description}
         </p>
         {nextStep ? (
-          <p className="slug mt-3">
+          <p className="slug mt-4 inline-flex items-center gap-2 rounded-control bg-sheet px-3 py-1.5">
             <span className="slug-key">next</span> {nextStep}
           </p>
         ) : null}
         {action ? (
-          <div className="mt-5 flex flex-wrap items-center gap-3">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             {action.href ? (
               <Button asChild>
                 <Link href={action.href}>{action.label}</Link>
@@ -88,7 +86,7 @@ export function EmptyNote({
   return (
     <p
       className={cn(
-        "rounded-control bg-wash px-3 py-2.5 text-sm leading-relaxed text-ink-soft",
+        "rounded-field bg-wash px-4 py-3 text-sm leading-relaxed text-ink-soft",
         className,
       )}
     >

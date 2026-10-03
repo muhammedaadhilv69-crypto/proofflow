@@ -118,7 +118,7 @@ export default async function DashboardPage() {
                 <li key={approval.id}>
                   <Link
                     href={`/projects/${approval.project_id}/deliverables/${approval.deliverable_id}`}
-                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-3.5 transition-colors hover:bg-wash"
+                    className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-6 py-4 transition-colors hover:bg-wash"
                   >
                     <span className="flex items-baseline gap-2.5">
                       <span className="rounded-[1px] bg-ink" aria-hidden="true" />
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
               <Plate key={project.id} flat className="border">
                 <Link
                   href={`/projects/${project.id}`}
-                  className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-4 transition-colors hover:bg-wash"
+                  className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-6 py-4 transition-colors hover:bg-wash"
                 >
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-ink">
                     {project.name}
@@ -215,7 +215,7 @@ function WorklistRow({
     <li>
       <Link
         href={href}
-        className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors hover:bg-wash"
+        className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4 transition-colors hover:bg-wash"
       >
         <StateMark state={status} className="size-2" />
         <span className="min-w-0 flex-1">

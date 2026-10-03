@@ -61,7 +61,7 @@ export function InviteMemberForm({ workspaceId }: { workspaceId: string }) {
       {message ? (
         <p
           role="status"
-          className="rounded-control bg-seal px-3 py-2.5 text-sm leading-relaxed text-ink"
+          className="rounded-field bg-signal-wash px-4 py-3 text-sm leading-relaxed text-ink"
         >
           {message}
         </p>
@@ -69,7 +69,7 @@ export function InviteMemberForm({ workspaceId }: { workspaceId: string }) {
       {error ? <FormError>{error}</FormError> : null}
 
       {fallbackLink ? (
-        <div className="rounded-control border border-waiting/40 bg-waiting-wash px-3 py-2.5">
+        <div className="rounded-field border border-waiting/40 bg-waiting-wash px-4 py-3">
           <p className="text-sm leading-relaxed text-ink">
             The invitation was created but could not be emailed. Send this link
             to them yourself.

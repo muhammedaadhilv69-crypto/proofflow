@@ -114,25 +114,23 @@ export function ReviewClient({ data }: { data: ReviewData }) {
 
   return (
     <div className="min-h-screen bg-paper">
-      <header className="border-b border-rule bg-sheet">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
+      <header className="border-b border-rule/60 bg-sheet">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <Wordmark showName={false} />
-          <p className="label-narrow text-[0.6875rem] text-ink-faint">
+          <span className="rounded-control bg-wash px-3.5 py-1.5 text-xs font-medium text-ink-soft">
             Secure review link
-          </p>
+          </span>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pb-40 pt-8 sm:px-6 sm:pb-16 sm:pt-10">
-        <div className="space-y-1.5">
-          <p className="label-narrow text-[0.6875rem] text-ink-faint">
-            {data.project.name}
-          </p>
-          <h1 className="text-[1.625rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink sm:text-3xl">
+      <main className="mx-auto max-w-3xl px-5 pb-40 pt-10 sm:px-8 sm:pb-16 sm:pt-12">
+        <div className="space-y-3">
+          <p className="text-xs font-medium text-ink-faint">{data.project.name}</p>
+          <h1 className="text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[2.5rem]">
             {data.deliverable.name}
           </h1>
           <SlugLine
-            className="pt-1.5"
+            className="pt-1"
             items={[
               { key: "version", value: version, tone: "strong" },
               { key: "prepared for", value: data.client.name },
@@ -148,8 +146,15 @@ export function ReviewClient({ data }: { data: ReviewData }) {
           />
         </div>
 
-        <div className="mt-8">
-          <div className="overflow-hidden rounded-sheet border border-rule bg-sheet shadow-proof">
+        <div className="mt-9">
+          {/*
+            `bg-stock`, not `bg-sheet`. This wrapper suppresses the preview's own
+            border and shadow so the two read as one object, which means it has
+            to be the same paper the preview is printed on — otherwise the
+            client's proof would sit on a dark plate in dark mode and the
+            letterbox around the artwork would read as part of the design.
+          */}
+          <div className="overflow-hidden rounded-sheet bg-stock shadow-proof">
             <FilePreview
               url={data.signedFileUrl}
               mimeType={data.version.file?.mime_type || "application/octet-stream"}
@@ -158,14 +163,16 @@ export function ReviewClient({ data }: { data: ReviewData }) {
             />
           </div>
           {data.version.file ? (
-            <p className="slug mt-2">{data.version.file.original_filename}</p>
+            <p className="slug mt-3">{data.version.file.original_filename}</p>
           ) : null}
         </div>
 
         {data.version.description ? (
-          <section className="mt-8">
-            <h2 className="slug-key">What changed in this version</h2>
-            <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
+          <section className="mt-9 rounded-sheet bg-wash p-6">
+            <h2 className="text-[0.9375rem] font-semibold text-ink">
+              What changed in this version
+            </h2>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
               {data.version.description}
             </p>
           </section>
@@ -182,14 +189,14 @@ export function ReviewClient({ data }: { data: ReviewData }) {
           </section>
         ) : null}
 
-        <section className="mt-10">
-          <h2 className="label-narrow text-xs font-medium text-ink">
+        <section className="mt-12">
+          <h2 className="text-[0.9375rem] font-semibold text-ink">
             {data.comments.length
               ? `Comments (${data.comments.length})`
               : "Comments"}
           </h2>
           {data.comments.length ? (
-            <ul className="mt-3 space-y-4 border-l border-rule pl-4">
+            <ul className="mt-4 space-y-4 border-l-2 border-rule pl-5">
               {data.comments.map((item) => (
                 <li key={item.id}>
                   <CommentItem comment={item} />
@@ -204,7 +211,7 @@ export function ReviewClient({ data }: { data: ReviewData }) {
           )}
 
           {data.canAct ? (
-            <form onSubmit={submitComment} className="mt-6 space-y-2.5">
+            <form onSubmit={submitComment} className="mt-7 space-y-3">
               <Field label="Add a comment" error={error || undefined}>
                 {({ id, invalid }) => (
                   <Textarea
@@ -218,7 +225,7 @@ export function ReviewClient({ data }: { data: ReviewData }) {
                   />
                 )}
               </Field>
-              <Button type="submit" size="sm" disabled={busy}>
+              <Button type="submit" disabled={busy}>
                 <MessageSquare aria-hidden="true" />
                 {pending === "comment" ? "Posting" : "Post comment"}
               </Button>
@@ -227,11 +234,11 @@ export function ReviewClient({ data }: { data: ReviewData }) {
         </section>
 
         {!data.canAct && !data.approval ? (
-          <section className="mt-10 rounded-sheet border border-rule bg-sheet px-5 py-4">
-            <h2 className="text-sm font-medium text-ink">
+          <section className="mt-12 rounded-sheet bg-wash p-6">
+            <h2 className="text-[0.9375rem] font-semibold text-ink">
               This review is closed
             </h2>
-            <p className="mt-1 text-sm leading-relaxed text-ink-soft">
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
               {data.unavailableReason ||
                 "The agency has closed this link. They will send you a new one when the next version is ready."}
             </p>
@@ -240,21 +247,22 @@ export function ReviewClient({ data }: { data: ReviewData }) {
       </main>
 
       {data.canAct ? (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-rule bg-sheet/95 px-4 pt-3 pb-safe backdrop-blur sm:static sm:mt-10 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-0 sm:pb-0 sm:backdrop-blur-none">
-          <div className="mx-auto max-w-3xl sm:px-6">
-            <div className="mx-auto max-w-xl rounded-sheet border border-rule bg-sheet px-4 py-3.5 shadow-lift sm:border-none sm:bg-transparent sm:p-0 sm:shadow-none">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-rule/70 bg-sheet/95 px-5 pt-4 pb-safe backdrop-blur sm:static sm:mt-12 sm:border-0 sm:bg-transparent sm:px-0 sm:pt-0 sm:pb-0 sm:backdrop-blur-none">
+          <div className="mx-auto max-w-3xl sm:px-8">
+            <div className="mx-auto max-w-xl rounded-sheet bg-wash p-5 sm:p-6">
               <p className="text-sm leading-relaxed text-ink-soft">
                 Approving accepts version {version} exactly as it appears
                 above. It cannot be changed afterwards.
               </p>
               {error && pending === "" ? (
-                <div className="mt-3">
+                <div className="mt-4">
                   <FormError>{error}</FormError>
                 </div>
               ) : null}
-              <div className="mt-3 flex flex-col-reverse gap-2 sm:flex-row">
+              <div className="mt-4 flex flex-col-reverse gap-2.5 sm:flex-row">
                 <Button
                   variant="outline"
+                  size="lg"
                   onClick={() => setChangesOpen(true)}
                   disabled={busy}
                   className="sm:flex-1"
@@ -337,19 +345,19 @@ export function ReviewClient({ data }: { data: ReviewData }) {
               approval cannot be withdrawn or edited.
             </DialogDescription>
           </DialogHeader>
-          <dl className="space-y-2 rounded-control bg-wash px-4 py-3">
-            <div className="flex items-baseline gap-2">
-              <dt className="slug-key">approving</dt>
+          <dl className="space-y-2.5 rounded-field bg-wash p-5">
+            <div className="flex items-baseline gap-2.5">
+              <dt className="slug-key w-20 shrink-0">approving</dt>
               <dd className="text-sm text-ink">{data.client.name}</dd>
             </div>
-            <div className="flex items-baseline gap-2">
-              <dt className="slug-key">version</dt>
+            <div className="flex items-baseline gap-2.5">
+              <dt className="slug-key w-20 shrink-0">version</dt>
               <dd className="font-mono text-sm tabular-nums text-ink">
                 {version}
               </dd>
             </div>
-            <div className="flex items-baseline gap-2">
-              <dt className="slug-key">recorded</dt>
+            <div className="flex items-baseline gap-2.5">
+              <dt className="slug-key w-20 shrink-0">recorded</dt>
               <dd className="font-mono text-xs tabular-nums text-ink-soft">
                 {formatDateTime(new Date().toISOString())}
               </dd>

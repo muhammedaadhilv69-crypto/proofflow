@@ -24,22 +24,24 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 /**
- * A toast carries a 2px rule on its leading edge, not a coloured background,
+ * A toast carries a 3px rule on its leading edge, not a coloured background,
  * and names its state with an icon as well as a colour.
  *
- * This is the one place a green appears in the product, and it is deliberately
- * limited to it: green confirms that something *you just did* succeeded. It
- * never represents an approval, because an approval is a record, not a
- * notification.
+ * Success is violet rather than green. The old system spent green exactly once,
+ * on the approval seal, on the argument that green means "a record exists" and
+ * never "something you just did". That argument survives the redesign intact —
+ * approval still owns the deepest ink in the product — so green stays out of the
+ * toast, and success takes the brand colour instead.
  */
 const toastVariants = cva(
-  "group pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden rounded-sheet border border-rule bg-sheet py-3 pl-4 pr-3 shadow-lift transition-[transform,opacity] data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none",
+  "group pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden rounded-sheet border border-rule/70 bg-sheet py-4 pl-5 pr-4 shadow-lift transition-[transform,opacity] data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none",
   {
     variants: {
       variant: {
-        default: "border-l-2 border-l-ink [&_svg]:text-ink",
-        success: "border-l-2 border-l-seal-mark [&_svg]:text-seal-mark",
-        destructive: "border-l-2 border-l-destructive [&_svg]:text-destructive",
+        default: "border-l-[3px] border-l-ink [&_svg]:text-ink",
+        success: "border-l-[3px] border-l-signal [&_svg]:text-signal",
+        destructive:
+          "border-l-[3px] border-l-destructive [&_svg]:text-destructive",
       },
     },
     defaultVariants: { variant: "default" },
@@ -78,7 +80,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "ml-auto inline-flex h-7 shrink-0 items-center rounded-control border border-rule-strong px-2 text-xs font-medium text-ink-soft transition-colors hover:bg-wash hover:text-ink",
+      "ml-auto inline-flex h-8 shrink-0 items-center rounded-control border border-rule-strong px-3.5 text-xs font-medium text-ink-soft transition-colors hover:bg-wash hover:text-ink",
       className,
     )}
     {...props}

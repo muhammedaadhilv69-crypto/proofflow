@@ -67,7 +67,7 @@ export default async function ProjectPage({
                     <li key={deliverable.id}>
                       <Link
                         href={`/projects/${project.id}/deliverables/${deliverable.id}`}
-                        className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors hover:bg-wash"
+                        className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4 transition-colors hover:bg-wash"
                       >
                         <StateMark state={deliverable.status} className="size-2" />
                         <span className="min-w-0 flex-1">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check, Minus } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
-import { MarketingFooter, MarketingHeader } from "@/app/(marketing)/marketing-chrome";
+import { MarketingShell } from "@/app/(marketing)/marketing-chrome";
 import { Button } from "@/components/ui/button";
 import { SlugLine } from "@/components/slug-line";
 
@@ -80,147 +80,154 @@ const CAPABILITIES: Array<{
 
 export default function PricingPage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <MarketingHeader />
-
-      <main className="flex-1">
-        <section className="border-b border-rule">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-16">
-            <h1 className="max-w-2xl text-[2.125rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink sm:text-4xl">
+    <MarketingShell>
+      <section className="border-b border-rule/60">
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="text-[2.25rem] font-semibold leading-[1.06] tracking-[-0.035em] text-ink sm:text-5xl">
               Priced per workspace. Approval records are never behind a paywall.
             </h1>
-            <SlugLine
-              className="mt-5"
-              items={[
-                { key: "billing", value: "monthly, cancel any time" },
-                { key: "client accounts", value: "never required" },
-              ]}
-            />
+            <div className="mt-7 flex justify-center">
+              <SlugLine
+                items={[
+                  { key: "billing", value: "monthly, cancel any time" },
+                  { key: "client accounts", value: "never required" },
+                ]}
+              />
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:py-16">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[46rem] border-separate border-spacing-0">
-              <caption className="sr-only">
-                Plan comparison for ProofFlow, listing what each plan includes
-              </caption>
-              <thead>
-                <tr>
+      <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-16">
+        {/*
+          The grid scrolls inside its own container rather than the page, which is
+          why the label column is sticky: on a phone the plans scroll sideways
+          under a pinned "included" column instead of collapsing into four
+          separate stacks the reader has to reassemble by hand.
+        */}
+        <div className="overflow-x-auto rounded-sheet">
+          <table className="w-full min-w-[46rem] border-separate border-spacing-0">
+            <caption className="sr-only">
+              Plan comparison for ProofFlow, listing what each plan includes
+            </caption>
+            <thead>
+              <tr>
+                <th
+                  scope="col"
+                  className="sticky left-0 z-10 w-56 border-b-2 border-rule bg-sheet py-4 pr-4 text-left align-bottom"
+                >
+                  <span className="slug-key">included</span>
+                </th>
+                {PLANS.map((plan) => (
                   <th
+                    key={plan.id}
                     scope="col"
-                    className="sticky left-0 z-10 w-56 border-b-2 border-ink bg-paper py-3 pr-4 text-left align-bottom"
+                    className={
+                      plan.recommended
+                        ? "border-b-2 border-rule border-x-2 border-t-2 border-signal bg-signal-wash px-4 py-4 text-left align-bottom"
+                        : "border-b-2 border-rule px-4 py-4 text-left align-bottom"
+                    }
                   >
-                    <span className="slug-key">included</span>
+                    {plan.recommended ? (
+                      <span className="slug-key mb-1 block text-signal">
+                        recommended
+                      </span>
+                    ) : null}
+                    <span className="block text-lg font-semibold text-ink">
+                      {plan.name}
+                    </span>
+                    <span className="mt-1 block font-mono text-xl tabular-nums text-ink">
+                      {plan.price === 0 ? "$0" : `$${plan.price}`}
+                      <span className="ml-1 text-xs text-ink-faint">/mo</span>
+                    </span>
+                    <span className="mt-1 block text-xs font-normal leading-snug text-ink-faint">
+                      {plan.for}
+                    </span>
                   </th>
-                  {PLANS.map((plan) => (
-                    <th
-                      key={plan.id}
-                      scope="col"
-                      className={
-                        plan.recommended
-                          ? "border-b-2 border-ink border-x-2 border-t-2 px-4 py-3 text-left align-bottom"
-                          : "border-b-2 border-ink px-4 py-3 text-left align-bottom"
-                      }
-                    >
-                      {plan.recommended ? (
-                        <span className="slug-key block text-ink">
-                          recommended
-                        </span>
-                      ) : null}
-                      <span className="block text-base font-semibold tracking-[-0.01em] text-ink">
-                        {plan.name}
-                      </span>
-                      <span className="mt-1 block font-mono text-lg tabular-nums text-ink">
-                        {plan.price === 0 ? "$0" : `$${plan.price}`}
-                        <span className="ml-1 text-xs text-ink-faint">/mo</span>
-                      </span>
-                      <span className="mt-0.5 block text-xs font-normal leading-snug text-ink-faint">
-                        {plan.for}
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {CAPABILITIES.map((row) => (
-                  <tr key={row.label}>
-                    <th
-                      scope="row"
-                      className="sticky left-0 z-10 border-b border-rule bg-paper py-3 pr-4 text-left text-sm font-normal text-ink-soft"
-                    >
-                      {row.label}
-                    </th>
-                    {PLANS.map((plan) => {
-                      const value = row.perPlan[plan.id];
-                      const featured = plan.recommended;
-                      return (
-                        <td
-                          key={plan.id}
-                          className={
-                            featured
-                              ? "border-b border-l border-r border-rule bg-sheet px-4 py-3 text-sm text-ink"
-                              : "border-b border-rule px-4 py-3 text-sm text-ink-soft"
-                          }
-                        >
-                          {value === true ? (
-                            <>
-                              <Check
-                                aria-hidden="true"
-                                className="size-4 text-ink"
-                              />
-                              <span className="sr-only">Included</span>
-                            </>
-                          ) : value === false ? (
-                            <>
-                              <Minus
-                                aria-hidden="true"
-                                className="size-4 text-ink-faint"
-                              />
-                              <span className="sr-only">Not included</span>
-                            </>
-                          ) : (
-                            <span className="font-mono tabular-nums">
-                              {value}
-                            </span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
                 ))}
-                <tr>
-                  <td className="sticky left-0 z-10 bg-paper py-4" />
-                  {PLANS.map((plan) => (
-                    <td
-                      key={plan.id}
-                      className={
-                        plan.recommended
-                          ? "border-x-2 border-b-2 border-ink px-4 py-4"
-                          : "px-4 py-4"
-                      }
-                    >
-                      <Button asChild block variant={plan.recommended ? "default" : "outline"}>
-                        <Link href={ROUTES.signup}>
-                          {plan.price === 0 ? "Start free" : `Choose ${plan.name}`}
-                        </Link>
-                      </Button>
-                    </td>
-                  ))}
+              </tr>
+            </thead>
+            <tbody>
+              {CAPABILITIES.map((row) => (
+                <tr key={row.label}>
+                  <th
+                    scope="row"
+                    className="sticky left-0 z-10 border-b border-rule/70 bg-sheet py-3.5 pr-4 text-left text-sm font-medium text-ink"
+                  >
+                    {row.label}
+                  </th>
+                  {PLANS.map((plan) => {
+                    const value = row.perPlan[plan.id];
+                    const featured = plan.recommended;
+                    return (
+                      <td
+                        key={plan.id}
+                        className={
+                          featured
+                            ? "border-b border-l border-r border-rule/70 bg-signal-wash px-4 py-3.5 text-sm text-ink"
+                            : "border-b border-rule/70 px-4 py-3.5 text-sm text-ink-soft"
+                        }
+                      >
+                        {value === true ? (
+                          <>
+                            <Check
+                              aria-hidden="true"
+                              className="size-4 text-signal"
+                            />
+                            <span className="sr-only">Included</span>
+                          </>
+                        ) : value === false ? (
+                          <>
+                            <Minus
+                              aria-hidden="true"
+                              className="size-4 text-ink-faint"
+                            />
+                            <span className="sr-only">Not included</span>
+                          </>
+                        ) : (
+                          <span className="font-mono tabular-nums">
+                            {value}
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
                 </tr>
-              </tbody>
-            </table>
-          </div>
+              ))}
+              <tr>
+                <td className="sticky left-0 z-10 bg-sheet py-5" />
+                {PLANS.map((plan) => (
+                  <td
+                    key={plan.id}
+                    className={
+                      plan.recommended
+                        ? "border-x-2 border-b-2 border-signal bg-signal-wash px-4 py-5"
+                        : "px-4 py-5"
+                    }
+                  >
+                    <Button
+                      asChild
+                      block
+                      variant={plan.recommended ? "default" : "outline"}
+                    >
+                      <Link href={ROUTES.signup}>
+                        {plan.price === 0 ? "Start free" : `Choose ${plan.name}`}
+                      </Link>
+                    </Button>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-          <p className="mt-6 max-w-2xl text-sm leading-relaxed text-ink-faint">
-            Every plan includes the full approval record: client name, email,
-            version number, UTC timestamp, and approval ID. Upgrading changes how
-            much work you can hold, not what you are allowed to prove.
-          </p>
-        </section>
-      </main>
-
-      <MarketingFooter />
-    </div>
+        <p className="mx-auto mt-8 max-w-2xl text-center text-sm leading-relaxed text-ink-faint">
+          Every plan includes the full approval record: client name, email,
+          version number, UTC timestamp, and approval ID. Upgrading changes how
+          much work you can hold, not what you are allowed to prove.
+        </p>
+      </section>
+    </MarketingShell>
   );
 }

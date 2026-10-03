@@ -22,7 +22,7 @@ export function CommentItem({
   return (
     <article
       className={cn(
-        "border-l-2 pl-3",
+        "border-l-2 pl-4",
         isChangeRequest ? "border-revise" : "border-transparent",
         className,
       )}
@@ -31,7 +31,7 @@ export function CommentItem({
         <span className="text-sm font-medium text-ink">
           {comment.author_name}
         </span>
-        <span className="label-narrow text-[0.625rem] text-ink-faint">
+        <span className="rounded-control bg-wash px-2 py-0.5 text-[0.6875rem] font-medium text-ink-faint">
           {comment.author_type === "CLIENT" ? "Client" : "Agency"}
           {isChangeRequest ? " / change request" : ""}
         </span>
@@ -43,7 +43,7 @@ export function CommentItem({
           {formatDateSlug(comment.created_at)}
         </time>
       </header>
-      <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
+      <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
         {comment.body}
       </p>
     </article>

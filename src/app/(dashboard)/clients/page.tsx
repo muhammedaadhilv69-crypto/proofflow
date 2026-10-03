@@ -59,7 +59,7 @@ export default async function ClientsPage() {
                 <li key={client.id}>
                   <Link
                     href={`/clients/${client.id}`}
-                    className="flex flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 transition-colors hover:bg-wash"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-2 px-6 py-4 transition-colors hover:bg-wash"
                   >
                     <span
                       aria-hidden="true"

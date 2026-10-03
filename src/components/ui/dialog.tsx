@@ -17,7 +17,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "animate-overlay-in fixed inset-0 z-50 bg-ink/35 backdrop-blur-[1px]",
+      "animate-overlay-in fixed inset-0 z-50 bg-ink/35 backdrop-blur-[2px]",
       className,
     )}
     {...props}
@@ -39,7 +39,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "animate-panel-in fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 rounded-sheet border border-rule bg-sheet p-6 shadow-overlay",
+        "animate-panel-in fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 rounded-sheet border border-rule/70 bg-sheet p-7 shadow-overlay",
         className,
       )}
       {...props}
@@ -58,8 +58,8 @@ const DialogHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn("flex flex-col gap-1.5 pr-8 text-left", className)}
+    <div
+    className={cn("flex flex-col gap-2 pr-8 text-left", className)}
     {...props}
   />
 );

@@ -1,22 +1,41 @@
 @import "tailwindcss";
 
 /*
- * ProofFlow — the press sheet.
+ * ProofFlow — the light table.
  *
- * The product's world is prepress: proofs are pulled, revisions are rounds, a
- * signed-off proof is locked like a plate. The palette is printer's inks rather
- * than UI status colors, which buys the one thing a proofing tool needs most:
- * the approved state must never be mistaken for any other state.
+ * The product's world is prepress: a proof is pulled, revisions are rounds, and
+ * a signed-off proof is locked like a plate. But the surface it is presented on
+ * is not the press floor — it is the light table the sheet is laid on. That is
+ * the whole visual idea now: a calm, cool grey desk, and one large white sheet
+ * floating on it. Everything else follows from putting the work on paper and the
+ * paper in the room.
  *
- * Two rules hold the system together.
+ * Three rules hold the system together.
  *
- * 1. Cyan is interactive. It marks things you can act on — links, focus, the
- *    primary control, a live review link. Nothing decorative is ever cyan.
+ * 1. Grey builds the room, white carries the work. Nothing is a colour until it
+ *    means something. The canvas is grey so that a white plate reads as an
+ *    object lying on a surface rather than as a hole in the page.
  *
- * 2. Approval is ink. Not green. A proof is stamped in the darkest ink on the
- *    sheet, so "approved" is the heaviest thing on the page rather than one
- *    more colored pill. Green is spent exactly once, as the tint on the
- *    approval seal's ground, and nowhere else.
+ * 2. Violet is interactive. It marks what you can act on — links, focus, the
+ *    primary control, a live review link. Nothing decorative is ever violet.
+ *
+ * 3. The bright inks are earned. Pink, amber and orange appear as fills on
+ *    state chips, metric tiles and the approval seal, never as a wash behind
+ *    body text. They are the loudest colours in the product and they are rationed
+ *    on purpose.
+ *
+ * One deliberate departure from the reference this system was drawn from: that
+ * design sets white type on its pinks and ambers, which measures 1.5:1 to 2.6:1
+ * and fails WCAG AA outright. Every bright fill here is paired with a dark ink
+ * of the same hue instead, so the palette stays as loud while the text stays
+ * readable.
+ *
+ * The room has two lights in it. `:root` is the light table under daylight;
+ * `.dark` is the same table after hours — the desk goes to near-black and the
+ * sheet becomes a plate raised off it by lightness rather than by shadow. Every
+ * token below is re-declared in `.dark`, and nothing outside that block is
+ * allowed to describe a colour, because a colour that only exists in one of the
+ * two rooms is a colour that fails in the other.
  */
 
 @theme inline {
@@ -36,106 +55,318 @@
   --color-accent-foreground: hsl(var(--ink));
   --color-destructive: hsl(var(--fault));
   --color-destructive-foreground: hsl(var(--sheet));
+  --color-fault-wash: hsl(var(--fault-wash));
   --color-border: hsl(var(--rule));
   --color-input: hsl(var(--rule-strong));
   --color-ring: hsl(var(--signal));
 
-  /* The ink ramp. Type only — see the contrast notes against each step. */
+  /* The ink ramp. Type only. Contrast on --sheet noted against each step. */
   --color-ink: hsl(var(--ink));
   --color-ink-soft: hsl(var(--ink-soft));
   --color-ink-faint: hsl(var(--ink-faint));
 
-  /* Surfaces. Paper is the light table; sheets are the paper on it. */
+  /* Surfaces. The grey is the desk; the white is the sheet on it. */
   --color-paper: hsl(var(--paper));
   --color-sheet: hsl(var(--sheet));
   --color-wash: hsl(var(--wash));
   --color-rule: hsl(var(--rule));
   --color-rule-strong: hsl(var(--rule-strong));
 
+  /*
+   * The proof's own paper, which belongs to neither room.
+   *
+   * A proof is an artwork whose colour the client is being asked to approve. If
+   * the surface under it followed the interface theme, a designer's proof would
+   * be judged against near-black in the evening and against white at noon — the
+   * same file looking like two different deliverables. So the ground a proof is
+   * laid on stays paper-coloured in both rooms, and dark mode becomes what it
+   * should always have been here: the light table after hours, with the work
+   * still lit on it.
+   */
+  --color-stock: hsl(var(--stock));
+
   /* Process inks, used strictly as state. */
   --color-signal: hsl(var(--signal));
+
+  /*
+   * Violet as a ground rather than as ink.
+   *
+   * `--signal` has to stay light enough to be legible as text on a dark room,
+   * but a violet that light cannot carry white type underneath it. So the two
+   * jobs get separate tokens: `--signal` is violet read *on* something, and
+   * `--signal-deep` is violet *under* something. In daylight the two are the
+   * same colour, which is why the split stays invisible until the lights go out.
+   */
+  --color-signal-deep: hsl(var(--signal-deep));
   --color-signal-wash: hsl(var(--signal-wash));
   --color-revise: hsl(var(--revise));
   --color-revise-wash: hsl(var(--revise-wash));
   --color-waiting: hsl(var(--waiting));
   --color-waiting-wash: hsl(var(--waiting-wash));
 
-  /* The single green in the product: the approval seal's ground. */
+  /* Approved: the deep brand violet, and a whisper of it as a tint. */
   --color-seal: hsl(var(--seal));
   --color-seal-mark: hsl(var(--seal-mark));
 
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
-  --font-narrow:
-    var(--font-archivo-narrow), var(--font-archivo), ui-sans-serif, system-ui,
-    sans-serif;
-  --font-mono:
-    var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* The loud decorative inks, rationed to fills and gradients. */
+  --color-flare-pink: hsl(var(--flare-pink));
+  --color-flare-amber: hsl(var(--flare-amber));
+  --color-flare-orange: hsl(var(--flare-orange));
+  --color-flare-blue: hsl(var(--flare-blue));
+
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-narrow: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
 
   /*
-   * Three radii, each tied to a role rather than applied as one house value.
-   * A sheet is a physical object, a control is operated, a mark is stamped.
+   * Four radii, each tied to a role.
+   *
+   * The house move is generous rounding: a sheet is an object with a soft edge,
+   * a control is something you press, and a pill is something you choose. The
+   * pill is doing more work here than in most systems — the reference language
+   * is built from it, and it is what makes a dense table feel like a product
+   * rather than a spreadsheet.
    */
-  --radius-sheet: 0.625rem;
-  --radius-control: 0.375rem;
-  --radius-mark: 0.1875rem;
+  --radius-sheet: 1.5rem;
+  --radius-control: 9999px;
+  --radius-field: 0.875rem;
+  --radius-mark: 0.5rem;
 
   /*
-   * Shadows carry meaning here, so there are only three. The proof preview gets
-   * `--shadow-proof` because it stands for a sheet of paper resting on a light
-   * table; everything else is interface chrome and barely casts one.
+   * Shadows are indigo-tinted and very soft. The grey canvas already separates a
+   * white plate from the page, so shadows only describe height, never edges.
+   *
+   * The values are held in `--pf-shadow-*` rather than written inline here,
+   * because a shadow is the one part of a plate that has to change when the room
+   * does: near-black on a dark desk reads as depth, the same indigo haze reads as
+   * a smudge. Declaring them inline would bake one room's shadow into every
+   * utility and leave `.dark` no way to reach them.
    */
-  --shadow-sheet: 0 1px 2px hsl(220 33% 12% / 0.1);
-  --shadow-lift:
-    0 6px 20px -6px hsl(220 33% 12% / 0.12),
-    0 2px 6px -2px hsl(220 33% 12% / 0.06);
-  --shadow-overlay:
-    0 24px 48px -12px hsl(220 33% 12% / 0.2),
-    0 8px 16px -8px hsl(220 33% 12% / 0.1);
-  --shadow-proof:
-    0 1px 1px hsl(220 33% 12% / 0.06), 0 12px 28px -8px hsl(220 33% 12% / 0.16);
+  --shadow-sheet: var(--pf-shadow-sheet);
+  --shadow-lift: var(--pf-shadow-lift);
+  --shadow-overlay: var(--pf-shadow-overlay);
+  --shadow-proof: var(--pf-shadow-proof);
+  /* The marketing sheet: one enormous card floating clear of the canvas. */
+  --shadow-float: var(--pf-shadow-float);
 }
 
 :root {
-  /* Paper: a cool light-table gray. Deliberately not cream. */
-  --paper: 214 32% 97%;
+  /*
+   * Daylight. `color-scheme` tells the browser to render its own furniture —
+   * scrollbars, form controls, the caret — against this room too, which is what
+   * stops a dark-mode page from shipping with a white scrollbar down one side.
+   */
+  color-scheme: light;
+
+  /* The desk. Cool grey, deliberately not neutral — it reads as a room. */
+  --paper: 222 24% 91%;
   --sheet: 0 0% 100%;
-  --wash: 214 26% 94%;
-  --rule: 214 22% 88%;
-  --rule-strong: 214 18% 78%;
+  --wash: 220 24% 96.5%;
+  --rule: 220 18% 89%;
+  --rule-strong: 220 14% 82%;
 
-  /* Ink ramp. Contrast on --paper: 15.9:1, 7.2:1, 4.8:1. */
-  --ink: 220 33% 12%;
-  --ink-soft: 219 13% 34%;
-  --ink-faint: 218 12% 44%;
+  /*
+   * Ink ramp. Contrast on --sheet: 17.9:1, 8.9:1, 4.7:1.
+   *
+   * --ink-faint is the step that matters most, because it carries the slug line
+   * and every secondary label. It sits at 4.7:1 rather than the 5:1 it could
+   * reach, which is the one place this ramp is tighter than it would ideally be.
+   */
+  --ink: 240 10% 7%;
+  --ink-soft: 222 11% 36%;
+  --ink-faint: 222 11% 44%;
 
-  --signal: 199 95% 30%;
-  --signal-wash: 197 62% 94%;
-  --revise: 328 68% 42%;
-  --revise-wash: 330 56% 95%;
-  --waiting: 32 95% 30%;
-  --waiting-wash: 36 80% 93%;
-  --fault: 358 62% 42%;
-  --fault-wash: 358 60% 96%;
+  /* Violet is the only interactive colour. */
+  --signal: 260 84% 55%;
+  /*
+   * The same violet as a ground. Identical here on purpose — see the note at
+   * `--color-signal-deep` — so daylight renders exactly as it did before dark
+   * mode existed.
+   */
+  --signal-deep: 260 84% 55%;
+  --signal-wash: 258 100% 97%;
 
-  --seal: 150 34% 93%;
-  --seal-mark: 152 44% 26%;
+  /* Changes requested: a revision round, not a failure. */
+  --revise: 333 76% 44%;
+  --revise-wash: 333 100% 96.5%;
 
-  --focus: 199 95% 30%;
+  /* Live with the client. */
+  --waiting: 30 88% 38%;
+  --waiting-wash: 44 100% 95.5%;
+
+  --fault: 358 70% 48%;
+  --fault-wash: 358 100% 97%;
+
+  /* Approved. Deep violet, not green: it is the brand's own heaviest ink. */
+  --seal: 252 100% 97.5%;
+  --seal-mark: 253 69% 41%;
+
+  /*
+   * The loud inks. These are the reference palette's pinks, ambers and oranges,
+   * held at the sampled values. Nothing in this list is ever a background for
+   * body text — see the note at the top of the file.
+   */
+  --flare-pink: 333 100% 72%;
+  --flare-amber: 46 100% 59%;
+  --flare-orange: 23 100% 59%;
+  --flare-blue: 231 64% 66%;
+
+  /*
+   * The paper a proof is printed on.
+   *
+   * This is the only surface in the system that does not answer to the theme,
+   * and it is the one exception with a reason attached. The client's judgement of
+   * the work must not depend on what time of day the reviewer opened the link.
+   */
+  --stock: 40 8% 97%;
+
+  --focus: 260 84% 55%;
+
+  /* The daylight shadows. Indigo, barely there. */
+  --pf-shadow-sheet:
+    0 1px 2px hsl(250 30% 22% / 0.04), 0 10px 28px -14px hsl(250 40% 28% / 0.12);
+  --pf-shadow-lift:
+    0 2px 4px hsl(250 30% 22% / 0.04),
+    0 18px 36px -14px hsl(250 40% 28% / 0.18);
+  --pf-shadow-overlay:
+    0 8px 16px -8px hsl(250 40% 24% / 0.12),
+    0 36px 64px -20px hsl(250 40% 24% / 0.26);
+  --pf-shadow-proof:
+    0 2px 4px hsl(250 30% 22% / 0.05),
+    0 20px 40px -18px hsl(250 40% 28% / 0.22);
+  --pf-shadow-float:
+    0 8px 20px -8px hsl(250 40% 26% / 0.08),
+    0 48px 90px -32px hsl(250 45% 24% / 0.22);
 }
 
 /*
- * There is deliberately no `.dark` block.
+ * After hours.
  *
- * An earlier draft carried a full dark palette that nothing could ever reach —
- * no toggle, no `prefers-color-scheme` listener, and no route that sets a
- * `dark` class. Theme tokens that cannot be activated are worse than no theme
- * tokens, because they read as coverage that does not exist and they drift out
- * of sync with the light values nobody is looking at.
+ * The same token names, re-declared. Nothing is added, nothing is removed: if a
+ * value cannot be expressed in both rooms it does not belong in this system, and
+ * that is the test this block is written to pass.
  *
- * Every colour below is a real, referenced token. Dark mode, when it is built,
- * should be introduced as a deliberate pass over these same names rather than
- * inherited from a block nobody has ever seen render.
+ * The room is not inverted so much as re-lit. The desk falls to near-black and
+ * the sheet stops being white and becomes a plate raised off the desk by
+ * lightness — `--sheet` sits above `--paper` in both rooms, which is the whole
+ * reason a single set of `bg-paper` / `bg-sheet` classes can serve either one.
+ *
+ * Every step below was checked against `--sheet`, and the darkest inks against
+ * `--paper` and `--wash`, since the slug line and secondary labels get read on
+ * all three. Contrast on `--sheet`: ink 16.1:1, ink-soft 8.8:1, ink-faint 6.1:1
+ * — which is the one place this room is *looser* than daylight, and deliberately
+ * so, because the faint step is what carries the slug line and the faintest step
+ * is where a raised surface would give up contrast first.
  */
+.dark {
+  color-scheme: dark;
+
+  /*
+   * The desk after dark. Not black: a near-black with a blue cast reads as a
+   * switched-off room, whereas pure black reads as a hole in the page.
+   */
+  --paper: 225 18% 7%;
+  --sheet: 226 16% 11%;
+  --wash: 226 14% 16%;
+  --rule: 224 12% 22%;
+  --rule-strong: 222 10% 30%;
+
+  /*
+   * The ink ramp, mirrored. `--ink` stops short of pure white: at 97% it is a
+   * glare source on a phone at night, and 95% measures the same 15:1 while
+   * reading as paper rather than as a lightbulb.
+   */
+  --ink: 244 18% 95%;
+  --ink-soft: 226 14% 74%;
+  --ink-faint: 224 12% 62%;
+
+  /*
+   * Violet, carried up rather than down. A 55%-lightness violet is the right
+   * ink on white and unreadable on a near-black desk, so in this room it lifts
+   * to 72% — 5.3:1 on `--sheet`, and 4.6:1 on `--wash`, which is where the
+   * secondary buttons that pair the two live.
+   */
+  --signal: 258 92% 72%;
+  /*
+   * And kept down for the job of being a ground. White on this measures 5.96:1;
+   * white on the 72% violet above would measure under 2:1, which is why a violet
+   * fill and a violet ink cannot share one token across two rooms.
+   */
+  --signal-deep: 258 84% 58%;
+  --signal-wash: 260 45% 15%;
+
+  /* Changes requested: the same hue, the same job, held to the same floor. */
+  --revise: 334 88% 70%;
+  --revise-wash: 334 40% 18%;
+
+  /* Live with the client. */
+  --waiting: 34 96% 62%;
+  --waiting-wash: 40 45% 16%;
+
+  --fault: 358 90% 70%;
+  --fault-wash: 358 42% 18%;
+
+  /*
+   * Approved is still the heaviest thing on the page. In daylight that means a
+   * near-black chip on a violet-white tint; here it is a near-white chip on a
+   * deep violet. What the reader is asked to notice — *this one is final* — is
+   * carried by the contrast between the chip and its own ground, not by which
+   * of the two is light.
+   */
+  --seal: 253 42% 16%;
+  --seal-mark: 253 88% 76%;
+
+  /*
+   * The loud inks are deliberately absent from this block.
+   *
+   * They are fills with a dark ink of their own hue already set on them, so they
+   * are the same object in either room. Tinting them for a dark background would
+   * mean re-solving every ink that sits on top, and the whole reason they are
+   * rationed is that they are already the loudest thing on a plate.
+   */
+
+  /*
+   * Proof paper, unchanged. See `--stock` in `:root`: the work stays lit.
+   */
+  --stock: 40 8% 97%;
+
+  --focus: 258 92% 72%;
+
+  /*
+   * The dark shadows. Near-black rather than indigo, and a touch tighter than
+   * daylight's — on a near-black desk a wide soft falloff stops reading as
+   * height and starts reading as a dirty patch, so the spread comes in and the
+   * opacity goes up to keep the lift legible against something this dark.
+   */
+  --pf-shadow-sheet:
+    0 1px 2px hsl(230 40% 2% / 0.5), 0 8px 24px -14px hsl(230 40% 2% / 0.85);
+  --pf-shadow-lift:
+    0 2px 4px hsl(230 40% 2% / 0.5),
+    0 16px 32px -14px hsl(230 40% 2% / 0.9);
+  --pf-shadow-overlay:
+    0 8px 16px -8px hsl(230 40% 2% / 0.55),
+    0 32px 60px -20px hsl(230 40% 2% / 0.92);
+  --pf-shadow-proof:
+    0 2px 4px hsl(230 40% 2% / 0.55),
+    0 18px 36px -18px hsl(230 40% 2% / 0.9);
+  --pf-shadow-float:
+    0 8px 20px -8px hsl(230 40% 2% / 0.5),
+    0 40px 80px -32px hsl(230 40% 2% / 0.95);
+}
+
+/*
+ * `next-themes` resolves the OS preference in a blocking script before first
+ * paint, so there is nothing left to do here for the initial room. These two
+ * rules cover the case it cannot reach: a preference that changes while the tab
+ * is open, where following it live is the difference between an app that feels
+ * installed and one that feels like a web page in a browser.
+ */
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    color-scheme: dark;
+  }
+}
 
 @layer base {
   *,
@@ -151,15 +382,19 @@
   body {
     background-color: hsl(var(--paper));
     color: hsl(var(--ink));
-    font-feature-settings: "cv11", "ss01";
-    font-variant-ligatures: contextual;
     text-rendering: optimizeLegibility;
   }
 
+  /*
+   * Display type in this system is large and light, and a light weight at 60px
+   * needs negative tracking or the words fall apart. Set it on the headings
+   * rather than globally, so body copy keeps its natural fit.
+   */
   h1,
   h2,
   h3 {
     text-wrap: balance;
+    letter-spacing: -0.02em;
   }
 
   /* One focus treatment for every interactive element on every screen. */
@@ -168,10 +403,10 @@
     outline-offset: 2px;
   }
 
-  /* Focus on a filled control should read as a halo, not a doubled border. */
+  /* Focus on a pill should read as a halo, not a doubled border. */
   button:focus-visible,
   [role="button"]:focus-visible {
-    outline-offset: 1px;
+    outline-offset: 2px;
   }
 
   ::selection {
@@ -190,39 +425,41 @@
   /*
    * The slug line.
    *
-   * Prepress carries a monospaced metadata strip along the foot of a sheet,
-   * and that strip is where a print job stops being an image and becomes a
-   * record. ProofFlow uses it for exactly the same job: the facts that identify
-   * a document rather than decorate it — version numbers, approval IDs, dates,
+   * Prepress carries a monospaced metadata strip along the foot of a sheet, and
+   * that strip is where a print job stops being an image and becomes a record.
+   * ProofFlow uses it for exactly the same job: the facts that identify a
+   * document rather than decorate it — version numbers, approval IDs, dates,
    * file facts.
    *
    * It is deliberately a run of key/value pairs spread on a baseline, never a
    * middot-joined string. Joins cost a reader a re-parse; columns do not.
    */
   .slug {
-    font-family:
-      var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 0.75rem;
-    line-height: 1.35;
-    letter-spacing: -0.005em;
+    line-height: 1.4;
     font-variant-numeric: tabular-nums;
     color: hsl(var(--ink-faint));
   }
 
   .slug-key {
-    font-family: var(--font-narrow), var(--font-archivo), sans-serif;
     font-size: 0.6875rem;
-    letter-spacing: 0.07em;
+    font-weight: 500;
+    letter-spacing: 0.01em;
     color: hsl(var(--ink-faint));
   }
 
   /*
-   * Identifier type: the narrow cut, for the short labels that would otherwise
-   * need all-caps to stay legible — table heads, nav, state words.
+   * Identifier type: the small label that sits above a value or beside one in a
+   * dense list — table heads, nav, state words, section labels.
+   *
+   * Outfit has no narrow cut, so this is the sans at medium weight and a size
+   * that stays legible small. It replaces wide-tracked uppercase entirely:
+   * letterspacing a geometric sans at 11px looks broken, not technical.
    */
   .label-narrow {
-    font-family: var(--font-narrow), var(--font-archivo), sans-serif;
-    letter-spacing: 0.055em;
+    font-weight: 500;
+    letter-spacing: 0;
   }
 
   /* Hanging indent for quoted client notes and change requests. */
@@ -234,40 +471,77 @@
   /*
    * A link inside a sentence.
    *
-   * These were previously distinguished by hue alone, and signal cyan against
-   * the soft ink it sits beside is 1.24:1 — indistinguishable to anyone who
-   * cannot separate those two colours, which is a WCAG 1.4.1 failure. Note that
-   * this is not the usual link-on-background contrast question: the link passes
-   * handily against the paper. It fails against the *neighbouring words*.
-   *
-   * So the underline is the cue that carries the meaning, not the colour. It is
-   * faint at rest and firms up on hover, which keeps a paragraph of them from
-   * turning into a page of rules.
+   * The underline is the cue that carries the meaning, not the colour: violet
+   * against the soft ink it sits beside is a 1.3:1 pairing, indistinguishable to
+   * anyone who cannot separate those two hues. Faint at rest, firm on hover, so
+   * a paragraph of them does not become a page of rules.
    */
   .link-inline {
     color: hsl(var(--signal));
     text-decoration: underline;
-    text-decoration-color: hsl(var(--signal) / 0.45);
+    text-decoration-color: hsl(var(--signal) / 0.4);
     text-underline-offset: 0.25rem;
+    font-weight: 500;
   }
 
   .link-inline:hover {
     text-decoration-color: hsl(var(--signal));
   }
-}
 
-/*
- * Bottom padding that clears the iOS home indicator.
- *
- * Tailwind v4 ships no safe-area utilities, so `pb-safe` compiled to nothing and
- * the review page's fixed action bar sat under the indicator. Declaring it here
- * is the fix; the 0.75rem is deliberately the same as the `pt-3` that pairs with
- * it, because the inset has to be *added* to the bar's own padding rather than
- * replace it — an element carrying both `py-3` and `pb-safe` loses its bottom
- * padding entirely, since both utilities set the same property.
- */
-@utility pb-safe {
-  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  /*
+   * The brand gradient.
+   *
+   * Four stops sampled from the reference artwork: deep violet, bright violet,
+   * pink, amber. It is used in exactly three places — the landing hero, the
+   * closing call to action, and the approval seal — because a gradient that
+   * appears everywhere is a background, not an accent.
+   */
+  .gradient-brand {
+    background-image: linear-gradient(
+      120deg,
+      hsl(253 69% 41%) 0%,
+      hsl(260 86% 56%) 38%,
+      hsl(333 100% 66%) 72%,
+      hsl(38 100% 60%) 100%
+    );
+  }
+
+  /* The same ramp at a shallower angle, for wide bands. */
+  .gradient-brand-soft {
+    background-image: linear-gradient(
+      100deg,
+      hsl(253 69% 44%) 0%,
+      hsl(262 80% 55%) 45%,
+      hsl(330 92% 62%) 100%
+    );
+  }
+
+  /*
+   * A bright metric tile.
+   *
+   * The reference sets these in flat pink, amber and orange. Kept, but the value
+   * inside is always the deep ink of the same hue rather than white — a filled
+   * tile should be the loudest thing in a card, not the least readable one.
+   */
+  .flare-pink {
+    background-color: hsl(var(--flare-pink));
+    color: hsl(333 80% 22%);
+  }
+
+  .flare-amber {
+    background-color: hsl(var(--flare-amber));
+    color: hsl(35 90% 18%);
+  }
+
+  .flare-orange {
+    background-color: hsl(var(--flare-orange));
+    color: hsl(22 85% 20%);
+  }
+
+  .flare-blue {
+    background-color: hsl(var(--flare-blue));
+    color: hsl(232 70% 20%);
+  }
 }
 
 /*
@@ -278,6 +552,9 @@
  * answers something the user just did — an overlay opened, a panel lifted, a
  * toast confirmed. Nothing animates on a timer, and nothing animates because a
  * section scrolled into view.
+ *
+ * The curves are softer than the previous system and settle rather than snap,
+ * which is the tempo of the reference language.
  */
 @keyframes pf-overlay-in {
   from {
@@ -291,7 +568,7 @@
 @keyframes pf-panel-in {
   from {
     opacity: 0;
-    transform: translate(-50%, calc(-50% + 6px)) scale(0.985);
+    transform: translate(-50%, calc(-50% + 10px)) scale(0.97);
   }
   to {
     opacity: 1;
@@ -302,7 +579,7 @@
 @keyframes pf-pop-in {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(0.98);
+    transform: translateY(-6px) scale(0.97);
   }
   to {
     opacity: 1;
@@ -313,11 +590,11 @@
 @keyframes pf-toast-in {
   from {
     opacity: 0;
-    transform: translateY(0.5rem);
+    transform: translateY(0.75rem) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -325,7 +602,7 @@
 @keyframes pf-press {
   from {
     opacity: 0;
-    transform: scale(1.03);
+    transform: scale(0.96);
   }
   to {
     opacity: 1;
@@ -342,25 +619,41 @@
   }
 }
 
+@keyframes pf-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-overlay-in {
-  animation: pf-overlay-in 150ms ease-out;
+  animation: pf-overlay-in 200ms ease-out;
 }
 
 .animate-panel-in {
-  animation: pf-panel-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: pf-panel-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .animate-pop-in {
-  animation: pf-pop-in 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: pf-pop-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: var(--radix-popper-transform-origin, center);
 }
 
 .animate-toast-in {
-  animation: pf-toast-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  animation: pf-toast-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .animate-press {
-  animation: pf-press 380ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  animation: pf-press 420ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* A section arriving, once, on first paint. Never on scroll. */
+.animate-rise-in {
+  animation: pf-rise-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .skeleton {
@@ -380,8 +673,7 @@
  * A skeleton that is up for 40ms on a warm cache reads as a flash, not as
  * progress, so the bar stays hidden for the first 200ms. `visibility` rather
  * than a conditional render, because the space has to be reserved: revealing a
- * bar must not shift the page. That matters most on the review page, where the
- * box the proof occupies sits directly above the approve button.
+ * bar must not shift the page.
  */
 .skeleton-screen {
   visibility: hidden;
@@ -392,6 +684,20 @@
   to {
     visibility: visible;
   }
+}
+
+/*
+ * Bottom padding that clears the iOS home indicator.
+ *
+ * Tailwind v4 ships no safe-area utilities, so `pb-safe` compiled to nothing and
+ * the review page's fixed action bar sat under the indicator. Declaring it here
+ * is the fix; the 0.75rem is deliberately the same as the `pt-3` that pairs with
+ * it, because the inset has to be *added* to the bar's own padding rather than
+ * replace it — an element carrying both `py-3` and `pb-safe` loses its bottom
+ * padding entirely, since both utilities set the same property.
+ */
+@utility pb-safe {
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
 @media (prefers-reduced-motion: reduce) {

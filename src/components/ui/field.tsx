@@ -42,7 +42,7 @@ export function Field({
   const describedBy = [hintId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-2", className)}>
       <Label htmlFor={id}>
         {label}
         {required ? (
@@ -77,7 +77,7 @@ export function FormError({ children }: { children: React.ReactNode }) {
   return (
     <p
       role="alert"
-      className="flex items-start gap-2 rounded-control bg-fault-wash px-3 py-2.5 text-sm leading-relaxed text-destructive"
+      className="flex items-start gap-2.5 rounded-field bg-fault-wash px-4 py-3 text-sm leading-relaxed text-destructive"
     >
       <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
       <span>{children}</span>

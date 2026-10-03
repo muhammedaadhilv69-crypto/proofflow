@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Check, Lock } from "lucide-react";
 import { ROUTES } from "@/lib/routes";
-import { MarketingFooter, MarketingHeader } from "@/app/(marketing)/marketing-chrome";
+import { MarketingShell } from "@/app/(marketing)/marketing-chrome";
 import { Button } from "@/components/ui/button";
 import { SlugLine } from "@/components/slug-line";
 import { ApprovalSeal } from "@/components/approval-seal";
@@ -125,51 +125,66 @@ const STEPS = [
   },
 ];
 
+/** The four steps get the loud fills, cycled the way the reference cycles them. */
+const STEP_FILLS = [
+  "flare-orange",
+  "flare-pink",
+  "flare-amber",
+  "gradient-brand",
+] as const;
+
 export default function MarketingPage() {
   return (
-    <div className="flex min-h-screen flex-col">
-      <MarketingHeader />
-
-      <main className="flex-1">
-        <section className="border-b border-rule">
-          <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-16 lg:py-20">
-            <div className="lg:pt-4">
-              <h1 className="text-[2.125rem] font-semibold leading-[1.08] tracking-[-0.03em] text-ink sm:text-5xl">
-                Know which version they approved.
-              </h1>
-              <p className="mt-5 max-w-md text-[0.9375rem] leading-relaxed text-ink-soft">
-                ProofFlow sends a client one review link for one specific
-                version. When they approve it, you get a permanent record of who,
-                which version, and exactly when.
-              </p>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <Button asChild size="lg">
-                  <Link href={ROUTES.signup}>Create a free workspace</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link href="#how-it-works">See the flow</Link>
-                </Button>
-              </div>
-              <p className="slug mt-5 flex flex-wrap gap-x-4">
-                <span>free plan</span>
-                <span>no client accounts</span>
-                <span>approval records included</span>
-              </p>
+    <MarketingShell>
+      <section className="border-b border-rule/60">
+        <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20 lg:py-24">
+          {/*
+            Centred, because the reference is centred and because a centred
+            headline over a centred artifact column is the only arrangement where
+            the eye lands on the claim and then falls straight onto the proof of
+            it.
+          */}
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="text-[2.5rem] font-semibold leading-[1.04] tracking-[-0.035em] text-ink sm:text-6xl lg:text-[4.25rem]">
+              Know which version they approved.
+            </h1>
+            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">
+              ProofFlow sends a client one review link for one specific version.
+              When they approve it, you get a permanent record of who, which
+              version, and exactly when.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+              <Button asChild size="lg">
+                <Link href={ROUTES.signup}>Start free</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link href="#how-it-works">See the flow</Link>
+              </Button>
             </div>
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+              {["Free plan", "No client accounts", "Approval records included"].map(
+                (item) => (
+                  <span
+                    key={item}
+                    className="rounded-control bg-wash px-3.5 py-1.5 text-xs font-medium text-ink-soft"
+                  >
+                    {item}
+                  </span>
+                ),
+              )}
+            </div>
+          </div>
 
-            {/*
-              The demo column is a worked example, and the seal inside it is an
-              `<h3>` because that is its level on a real page. Under the hero's
-              `<h1>` that skipped a level, so the column gets a heading of its own
-              — which is also the only thing telling a screen reader that the rail
-              and the seal below it are an illustration rather than live data.
-            */}
-            <h2 className="sr-only">
-              Example: four rounds of review and the approval record they produced
-            </h2>
-            <div className="min-w-0 space-y-6">
-              <div className="rounded-sheet border border-rule bg-sheet p-5 shadow-sheet">
-                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+          {/*
+            The demo column. The seal sits directly under the rail rather than
+            beside it, because the seal is the punchline to the rail's question —
+            "which version did they approve?" — and the answer belongs directly
+            beneath the asking.
+          */}
+          <div className="mx-auto mt-16 max-w-3xl lg:mt-20">
+            <div className="rounded-sheet bg-wash p-6 sm:p-8">
+              <div className="rounded-sheet bg-sheet p-6 shadow-sheet sm:p-8">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
                   <SlugLine
                     items={[
                       { key: "project", value: "Northwind rebrand" },
@@ -182,14 +197,16 @@ export default function MarketingPage() {
                   </p>
                 </div>
 
-                <div className="mt-4 border-t border-rule pt-4">
+                <div className="mt-6 border-t border-rule/70 pt-6">
                   <RevisionRail
                     versions={DEMO_VERSIONS}
                     currentVersionId="v4"
                   />
                 </div>
               </div>
+            </div>
 
+            <div className="mt-6">
               <ApprovalSeal
                 approval={DEMO_VERSIONS[0].approval!}
                 deliverableName="Homepage hero images"
@@ -198,139 +215,153 @@ export default function MarketingPage() {
               />
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="how-it-works" className="border-b border-rule bg-sheet">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
-            <div className="max-w-xl">
-              <h2 className="text-[1.625rem] font-semibold leading-tight tracking-[-0.025em] text-ink sm:text-3xl">
-                Four steps, and the last one is permanent.
+      <section id="how-it-works" className="border-b border-rule/60">
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 lg:py-24">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-4xl">
+              Four steps, and the last one is permanent.
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-base leading-relaxed text-ink-soft">
+              The whole product exists to make step four trustworthy. The first
+              three are table stakes.
+            </p>
+          </div>
+
+          {/*
+            Numbered markers are used here because this content genuinely is a
+            sequence — each step cannot happen before the one before it, and
+            the reader is meant to follow the order. They would be decoration
+            anywhere else in the design.
+          */}
+          <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {STEPS.map((step, index) => (
+              <li
+                key={step.title}
+                className="rounded-sheet bg-wash p-6"
+              >
+                {/*
+                  The number is the loudest thing in its card and the four fills
+                  cycle through the brand ramps, which is the reference's own
+                  device for making a flat list of four read as a set.
+                */}
+                <span
+                  className={
+                    "flex size-14 items-center justify-center rounded-sheet text-2xl font-semibold " +
+                    STEP_FILLS[index % STEP_FILLS.length]
+                  }
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <h3 className="mt-5 text-base font-semibold text-ink">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                  {step.body}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="border-b border-rule/60">
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20 lg:py-24">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] lg:gap-16">
+            <div>
+              <h2 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-4xl">
+                What an approval actually says
               </h2>
-              <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
-                The whole product exists to make step four trustworthy. The first
-                three are table stakes.
+              <p className="mt-4 text-base leading-relaxed text-ink-soft">
+                Not &ldquo;Mira approved the homepage&rdquo;. The specific
+                version, the address it came from, and a time that does not
+                depend on anyone&rsquo;s timezone.
               </p>
+              <Button asChild variant="outline" className="mt-7">
+                <Link href={ROUTES.features}>All features</Link>
+              </Button>
             </div>
 
-            {/*
-              Numbered markers are used here because this content genuinely is a
-              sequence — each step cannot happen before the one before it, and
-              the reader is meant to follow the order. They would be decoration
-              anywhere else in the design.
-            */}
-            <ol className="mt-10 grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
-              {STEPS.map((step, index) => (
-                <li key={step.title} className="border-t-2 border-ink pt-4">
-                  <span className="font-mono text-xs tabular-nums text-ink-faint">
-                    {String(index + 1).padStart(2, "0")}
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {[
+                {
+                  title: "Bound to one version",
+                  body: "An approval record cannot be reassigned. Approving v4 never leaves v3 looking approved.",
+                },
+                {
+                  title: "Stored with the client’s address",
+                  body: "The email the review link was issued to is recorded against the approval.",
+                },
+                {
+                  title: "Timestamped in UTC",
+                  body: "Recorded to the minute, so a dispute six months later has something to point at.",
+                },
+                {
+                  title: "Locked on approval",
+                  body: "No upload, edit, or re-review can touch an approved version afterwards.",
+                },
+              ].map((item) => (
+                <li key={item.title} className="rounded-sheet bg-wash p-6">
+                  <span
+                    aria-hidden="true"
+                    className="grid size-9 place-items-center rounded-full bg-sheet text-ink shadow-sheet"
+                  >
+                    <Check className="size-4" />
                   </span>
-                  <h3 className="mt-3 text-sm font-semibold tracking-[-0.01em] text-ink">
-                    {step.title}
+                  <h3 className="mt-4 text-base font-semibold text-ink">
+                    {item.title}
                   </h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
-                    {step.body}
+                    {item.body}
                   </p>
                 </li>
               ))}
-            </ol>
+            </ul>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="border-b border-rule">
-          <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
-            <div className="grid gap-10 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-16">
-              <div>
-                <h2 className="text-[1.625rem] font-semibold leading-tight tracking-[-0.025em] text-ink sm:text-3xl">
-                  What an approval actually says
-                </h2>
-                <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
-                  Not &ldquo;Mira approved the homepage&rdquo;. The specific
-                  version, the address it came from, and a time that does not
-                  depend on anyone&rsquo;s timezone.
-                </p>
-                <Button asChild variant="outline" className="mt-6">
-                  <Link href={ROUTES.features}>All features</Link>
-                </Button>
-              </div>
-
-              <ul className="space-y-4">
-                {[
-                  {
-                    title: "Bound to one version",
-                    body: "An approval record cannot be reassigned. Approving v4 never leaves v3 looking approved.",
-                  },
-                  {
-                    title: "Stored with the client’s address",
-                    body: "The email the review link was issued to is recorded against the approval.",
-                  },
-                  {
-                    title: "Timestamped in UTC",
-                    body: "Recorded to the minute, so a dispute six months later has something to point at.",
-                  },
-                  {
-                    title: "Locked on approval",
-                    body: "No upload, edit, or re-review can touch an approved version afterwards.",
-                  },
-                ].map((item) => (
-                  <li
-                    key={item.title}
-                    className="flex gap-3 border-b border-rule pb-4 last:border-b-0 last:pb-0"
-                  >
-                    <Check
-                      aria-hidden="true"
-                      className="mt-0.5 size-4 shrink-0 text-ink"
-                    />
-                    <div>
-                      <h3 className="text-sm font-semibold text-ink">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-                        {item.body}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {/*
+        The closing band is the one place the full four-stop gradient runs at
+        width. It is the last thing on the page and the only place a gradient is
+        allowed to be the background rather than an accent, because nothing
+        competes with it.
+      */}
+      <section className="gradient-brand-soft">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-16 sm:px-8 sm:py-20 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-lg">
+            <h2 className="text-[2rem] font-semibold leading-tight tracking-[-0.03em] text-white sm:text-4xl">
+              Stop keeping approvals in your inbox.
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-white/85">
+              Start with a free workspace. Add a project, upload a version, and
+              send the link.
+            </p>
           </div>
-        </section>
-
-        <section className="bg-ink text-sheet">
-          <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-14 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:py-16">
-            <div className="max-w-lg">
-              <h2 className="text-[1.625rem] font-semibold leading-tight tracking-[-0.025em] sm:text-3xl">
-                Stop keeping approvals in your inbox.
-              </h2>
-              <p className="mt-3 text-[0.9375rem] leading-relaxed text-sheet/75">
-                Start with a free workspace. Add a project, upload a version, and
-                send the link.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="bg-sheet text-ink hover:bg-sheet/90"
-              >
-                <Link href={ROUTES.signup}>Create a free workspace</Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="border-sheet/35 bg-transparent text-sheet hover:bg-sheet/10 hover:text-sheet"
-              >
-                <Link href={ROUTES.pricing}>
-                  <Lock aria-hidden="true" />
-                  See pricing
-                </Link>
-              </Button>
-            </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              asChild
+              size="lg"
+              className="bg-white text-[hsl(253_69%_41%)] shadow-[0_8px_20px_-8px_hsl(253_69%_30%/0.5)] hover:bg-white/90"
+            >
+              <Link href={ROUTES.signup}>Create a free workspace</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="border-white/40 bg-transparent text-white hover:border-white/70 hover:bg-white/10 hover:text-white"
+            >
+              <Link href={ROUTES.pricing}>
+                <Lock aria-hidden="true" />
+                See pricing
+              </Link>
+            </Button>
           </div>
-        </section>
-      </main>
-
-      <MarketingFooter />
-    </div>
+        </div>
+      </section>
+    </MarketingShell>
   );
 }

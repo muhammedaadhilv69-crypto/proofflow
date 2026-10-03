@@ -27,21 +27,21 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        "flex flex-col gap-4 border-b border-rule pb-5 sm:flex-row sm:items-start sm:justify-between sm:gap-6",
+        "flex flex-col gap-5 border-b border-rule/70 pb-6 sm:flex-row sm:items-start sm:justify-between sm:gap-6",
         className,
       )}
     >
       <div className="min-w-0">
         <Breadcrumb path={path} />
-        <h1 className="mt-2 text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink sm:text-[2rem]">
+        <h1 className="mt-2.5 text-[2rem] font-semibold leading-[1.1] tracking-[-0.03em] text-ink sm:text-[2.5rem]">
           {title}
         </h1>
         {slug?.length ? (
-          <SlugLine items={slug} className="mt-3" size="compact" />
+          <SlugLine items={slug} className="mt-4" size="compact" />
         ) : null}
       </div>
       {actions ? (
-        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:pt-6">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:pt-8">
           {actions}
         </div>
       ) : null}
@@ -102,10 +102,10 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className={cn("space-y-3", className)}>
+    <section className={cn("space-y-4", className)}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1.5">
-          <h2 className="label-narrow text-xs font-medium text-ink">{title}</h2>
+          <h2 className="text-[0.9375rem] font-semibold text-ink">{title}</h2>
           {slug?.length ? <SlugLine items={slug} size="compact" /> : null}
         </div>
         {action}
