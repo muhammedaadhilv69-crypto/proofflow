@@ -34,8 +34,8 @@ export function StateChip({
   return (
     <span
       className={cn(
-        "inline-flex w-fit items-center gap-1.5 rounded-mark font-medium",
-        size === "large" ? "px-2 py-1 text-sm" : "px-1.5 py-0.5 text-xs",
+        "inline-flex w-fit items-center gap-1.5 rounded-control font-medium",
+        size === "large" ? "px-3 py-1.5 text-sm" : "px-2.5 py-1 text-xs",
         meta.wash,
         meta.text,
         className,
@@ -56,7 +56,7 @@ export function StateMark({ state, className }: { state: StateKey; className?: s
         "inline-block size-[0.5em] shrink-0",
         meta.weight === "quiet" && "rounded-full border-[1.5px] border-current",
         meta.weight === "live" && "rounded-full bg-current",
-        meta.weight === "final" && "rounded-[1px] bg-current",
+        meta.weight === "final" && "rounded-[0.1875rem] bg-current",
         className,
       )}
     />

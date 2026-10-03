@@ -56,7 +56,7 @@ export default async function ClientDetailPage({
                   <li key={project.id}>
                     <Link
                       href={`/projects/${project.id}`}
-                      className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors hover:bg-wash"
+                      className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4 transition-colors hover:bg-wash"
                     >
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-medium text-ink">

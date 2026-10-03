@@ -86,7 +86,7 @@ export function RevisionRail({
   children?: (version: RailVersion) => React.ReactNode;
 }) {
   return (
-    <ol className={cn("space-y-1", className)}>
+    <ol className={cn("space-y-1.5", className)}>
       {versions.map((version) => {
         const isCurrent = version.id === currentVersionId;
         const final = version.state === "APPROVED";
@@ -94,28 +94,28 @@ export function RevisionRail({
         const actor = actorOf(version);
 
         return (
-          <li key={version.id} className="relative pl-4">
+          <li key={version.id} className="relative pl-5">
             <span
               aria-hidden="true"
               className={cn(
-                "absolute inset-y-1 left-0 w-px",
-                final ? "w-0.5 bg-ink" : "bg-rule-strong",
+                "absolute inset-y-1.5 left-0 w-px",
+                final ? "w-0.5 bg-signal" : "bg-rule-strong",
               )}
             />
             <details open={defaultOpen} className="group">
               <summary
                 className={cn(
-                  "flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1 rounded-control py-2 pr-1 transition-colors hover:bg-wash",
+                  "flex cursor-pointer list-none flex-wrap items-baseline gap-x-3 gap-y-1 rounded-field py-2.5 pr-3 transition-colors hover:bg-wash",
                   "[&::-webkit-details-marker]:hidden",
                 )}
               >
                 <ChevronRight
                   aria-hidden="true"
-                  className="size-3 shrink-0 translate-y-px text-ink-faint transition-transform duration-150 group-open:rotate-90"
+                  className="size-3.5 shrink-0 translate-y-px text-ink-faint transition-transform duration-150 group-open:rotate-90"
                 />
                 <span
                   className={cn(
-                    "font-mono text-xs tabular-nums",
+                    "font-mono text-sm tabular-nums",
                     final ? "font-medium text-ink" : "text-ink-soft",
                   )}
                 >
@@ -123,7 +123,7 @@ export function RevisionRail({
                 </span>
                 <StateChip state={version.state} audience={audience} />
                 {version.approval ? (
-                  <span className="label-narrow text-[0.6875rem] text-ink-faint">
+                  <span className="text-xs font-medium text-ink-faint">
                     {versionStateShort(version.state)}
                   </span>
                 ) : null}
@@ -144,7 +144,7 @@ export function RevisionRail({
                 </span>
               </summary>
 
-              <div className="mb-2 ml-7 space-y-3 border-l border-rule pl-4">
+              <div className="mb-3 ml-8 space-y-3 border-l border-rule/70 pl-5">
                 {version.description ? (
                   <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
                     {version.description}
@@ -183,7 +183,7 @@ export function RevisionRail({
                           <span className="font-medium text-ink">
                             {comment.author_name}
                           </span>
-                          <span className="label-narrow text-[0.625rem] text-ink-faint">
+                          <span className="text-[0.6875rem] font-medium text-ink-faint">
                             {comment.author_type === "CLIENT"
                               ? "Client"
                               : "Agency"}
@@ -211,7 +211,7 @@ export function RevisionRail({
         );
       })}
       {/* Spacer so the final spine segment does not overhang the last row. */}
-      <li aria-hidden="true" className="pl-4">
+      <li aria-hidden="true" className="pl-5">
         <span className="block h-0 w-px" />
       </li>
       <li className="sr-only">

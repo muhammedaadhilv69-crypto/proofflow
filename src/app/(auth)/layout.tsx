@@ -5,6 +5,11 @@ import { Wordmark } from "@/components/wordmark";
  * the right. The right half is not decoration — someone opening this page has
  * just arrived from an invitation or a forgotten password, and the thing worth
  * showing them is the record they will end up holding, not a stock illustration.
+ *
+ * It is shown as the real gradient seal rather than a muted sketch of one, for
+ * the same reason the landing page shows the real revision rail: a promise drawn
+ * in the product's own materials reads differently from a promise described in
+ * words.
  */
 export default function AuthLayout({
   children,
@@ -20,16 +25,16 @@ export default function AuthLayout({
         </div>
       </main>
 
-      <aside className="hidden border-l border-rule bg-sheet lg:flex lg:flex-col lg:justify-center lg:px-12">
+      <aside className="hidden items-center justify-center bg-sheet px-12 lg:flex">
         <div className="max-w-sm">
-          <div className="rounded-sheet border border-rule bg-paper p-5">
-            <p className="label-narrow text-[0.6875rem] text-ink-faint">
+          <div className="gradient-brand rounded-sheet p-6 shadow-lift">
+            <p className="text-xs font-medium text-white/80">
               Northwind rebrand / Homepage design
             </p>
-            <p className="label-narrow mt-3 text-xl font-semibold uppercase leading-none tracking-[0.16em] text-ink">
+            <p className="mt-2 text-2xl font-semibold uppercase leading-none tracking-[0.08em] text-white">
               Approved
             </p>
-            <dl className="mt-4 space-y-1.5 border-t border-rule pt-3">
+            <dl className="mt-5 space-y-2 rounded-field bg-[hsl(253_69%_22%)] p-4">
               {[
                 ["record", "APR-7C1E4A9B2D08F615"],
                 ["version", "v4"],
@@ -37,15 +42,17 @@ export default function AuthLayout({
                 ["recorded", "2026-09-30 18:02 UTC"],
               ].map(([key, value]) => (
                 <div key={key} className="flex items-baseline gap-3">
-                  <dt className="slug-key w-20 shrink-0">{key}</dt>
-                  <dd className="truncate font-mono text-xs tabular-nums text-ink">
+                  <dt className="w-20 shrink-0 text-[0.6875rem] font-medium text-white/60">
+                    {key}
+                  </dt>
+                  <dd className="truncate font-mono text-xs tabular-nums text-white">
                     {value}
                   </dd>
                 </div>
               ))}
             </dl>
           </div>
-          <p className="mt-5 text-sm leading-relaxed text-ink-soft">
+          <p className="mt-6 text-sm leading-relaxed text-ink-soft">
             When a client approves a proof, ProofFlow records which version they
             saw, who they were, and exactly when. That record cannot be edited
             afterwards.

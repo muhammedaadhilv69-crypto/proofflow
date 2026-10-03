@@ -19,7 +19,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default select-none items-center rounded-control px-2 py-1.5 text-sm text-ink-soft outline-none data-[state=open]:bg-wash data-[highlighted]:bg-wash data-[highlighted]:text-ink",
+      "flex cursor-default select-none items-center rounded-control px-3 py-2 text-sm text-ink-soft outline-none data-[state=open]:bg-wash data-[highlighted]:bg-wash data-[highlighted]:text-ink",
       className,
     )}
     {...props}
@@ -37,7 +37,7 @@ const DropdownMenuSubContent = React.forwardRef<
   <DropdownMenuPrimitive.SubContent
     ref={ref}
     className={cn(
-      "animate-pop-in min-w-[8rem] overflow-hidden rounded-sheet border border-rule bg-popover p-1 text-popover-foreground shadow-lift",
+      "animate-pop-in min-w-[8rem] overflow-hidden rounded-field border border-rule/70 bg-popover p-1.5 text-popover-foreground shadow-lift",
       className,
     )}
     {...props}
@@ -54,7 +54,7 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "animate-pop-in z-50 min-w-[13rem] overflow-hidden rounded-sheet border border-rule bg-popover p-1 text-popover-foreground shadow-lift",
+        "animate-pop-in z-50 min-w-[13rem] overflow-hidden rounded-field border border-rule/70 bg-popover p-1.5 text-popover-foreground shadow-lift",
         className,
       )}
       {...props}
@@ -72,7 +72,7 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-control px-2 py-1.5 text-sm text-ink-soft outline-none transition-colors data-[highlighted]:bg-wash data-[highlighted]:text-ink data-[disabled]:pointer-events-none data-[disabled]:text-ink-faint",
+      "relative flex cursor-default select-none items-center gap-2 rounded-control px-3 py-2 text-sm text-ink-soft outline-none transition-colors data-[highlighted]:bg-wash data-[highlighted]:text-ink data-[disabled]:pointer-events-none data-[disabled]:text-ink-faint",
       variant === "danger" &&
         "text-destructive data-[highlighted]:bg-fault-wash data-[highlighted]:text-destructive",
       className,
@@ -82,29 +82,48 @@ const DropdownMenuItem = React.forwardRef<
 ));
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName;
 
+/**
+ * `hideIndicator` exists for the one row that states itself with a switch.
+ *
+ * A checkbox item normally announces itself twice — a tick in the leading edge
+ * and `aria-checked` — and the tick is drawn as an absolutely positioned span
+ * because it has to sit outside the flex row. That works fine for a tick, which
+ * is 14px wide, and breaks for a 36px switch that needs the row's full width. So
+ * the indicator is optional rather than something every caller has to cancel
+ * with an arbitrary `[&>span]:hidden` selector.
+ */
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(({ className, children, checked, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem> & {
+    hideIndicator?: boolean;
+  }
+>(({ className, children, checked, hideIndicator, ...props }, ref) => (
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     checked={checked}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-control py-1.5 pl-7 pr-2 text-sm text-ink-soft outline-none transition-colors data-[highlighted]:bg-wash data-[highlighted]:text-ink",
+      "relative flex cursor-default select-none items-center rounded-control py-2 pl-8 pr-3 text-sm text-ink-soft outline-none transition-colors data-[highlighted]:bg-wash data-[highlighted]:text-ink",
+      hideIndicator && "justify-between gap-3 pl-3",
       className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex size-3.5 items-center justify-center text-ink">
-      <DropdownMenuPrimitive.ItemIndicator>
-        <Check aria-hidden="true" className="size-3.5" />
-      </DropdownMenuPrimitive.ItemIndicator>
-    </span>
+    {hideIndicator ? null : (
+      <span className="absolute left-3 flex size-3.5 items-center justify-center text-signal">
+        <DropdownMenuPrimitive.ItemIndicator>
+          <Check aria-hidden="true" className="size-3.5" />
+        </DropdownMenuPrimitive.ItemIndicator>
+      </span>
+    )}
     {children}
   </DropdownMenuPrimitive.CheckboxItem>
 ));
 DropdownMenuCheckboxItem.displayName =
   DropdownMenuPrimitive.CheckboxItem.displayName;
+
+type DropdownMenuCheckboxItemProps = React.ComponentPropsWithoutRef<
+  typeof DropdownMenuCheckboxItem
+>;
 
 const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
@@ -113,12 +132,12 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-control py-1.5 pl-7 pr-2 text-sm text-ink-soft outline-none transition-colors data-[highlighted]:bg-wash data-[highlighted]:text-ink",
+      "relative flex cursor-default select-none items-center rounded-control py-2 pl-8 pr-3 text-sm text-ink-soft outline-none transition-colors data-[highlighted]:bg-wash data-[highlighted]:text-ink",
       className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex size-3.5 items-center justify-center text-ink">
+    <span className="absolute left-3 flex size-3.5 items-center justify-center text-signal">
       <DropdownMenuPrimitive.ItemIndicator>
         <Check aria-hidden="true" className="size-3.5" />
       </DropdownMenuPrimitive.ItemIndicator>
@@ -169,6 +188,7 @@ export {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuCheckboxItem,
+  type DropdownMenuCheckboxItemProps,
   DropdownMenuRadioItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,

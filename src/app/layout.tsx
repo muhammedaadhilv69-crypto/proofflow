@@ -1,31 +1,26 @@
 import type { Metadata } from "next";
-import { Archivo, Archivo_Narrow, IBM_Plex_Mono } from "next/font/google";
+import { Outfit, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
 
 /**
- * One superfamily in two widths, plus a mono.
+ * One geometric sans, plus a mono.
  *
- * Archivo carries interface and headings because its squarish, slightly
- * newspaper grotesque suits a product about printed approval. Archivo Narrow
- * does the identifier work — table heads, nav, state words — because a narrow
- * cut stays legible small without resorting to capitals. IBM Plex Mono is
- * reserved for the slug line and the things a slug line holds: version
- * numbers, approval numbers, timestamps, file facts.
+ * Outfit carries everything — interface, headings, marketing — because its
+ * circular bowls and open apertures are the whole point of the visual language
+ * this product now speaks. It is also unusually wide for a geometric, which is
+ * what lets a centred headline at 68px hold together without going tight and
+ * editorial.
  *
- * There is deliberately no serif. This is instrument software, not editorial,
- * and a display serif was pulling the whole product toward the generic
- * high-contrast-SaaS look.
+ * IBM Plex Mono is kept, but demoted to one job: the slug line and the things a
+ * slug line holds — version numbers, approval numbers, timestamps, file facts.
+ * A record that may be read aloud or transcribed should not be set in a face
+ * whose zero and capital O are hard to tell apart at a glance.
  */
-const archivo = Archivo({
+const outfit = Outfit({
   subsets: ["latin"],
-  variable: "--font-archivo",
-  display: "swap",
-});
-
-const archivoNarrow = Archivo_Narrow({
-  subsets: ["latin"],
-  variable: "--font-archivo-narrow",
+  variable: "--font-outfit",
   display: "swap",
 });
 
@@ -51,13 +46,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
+    /*
+     * `suppressHydrationWarning` is required, not defensive. next-themes injects
+     * a blocking script that writes the `.dark` class onto this element before
+     * React hydrates, so the class list on `<html>` at hydration time is
+     * genuinely different from the one this component rendered — React says so
+     * rather than silently reverting it, and the room would flip on every load.
+     */
     <html
       lang="en"
-      className={`${archivo.variable} ${archivoNarrow.variable} ${plexMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${outfit.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        {children}
-        <Toaster />
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

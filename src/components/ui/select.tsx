@@ -67,7 +67,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "animate-pop-in relative z-50 max-h-96 min-w-[10rem] overflow-hidden rounded-sheet border border-rule bg-popover text-popover-foreground shadow-lift",
+        "animate-pop-in relative z-50 max-h-96 min-w-[10rem] overflow-hidden rounded-field border border-rule/70 bg-popover text-popover-foreground shadow-lift",
         position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
         className,
@@ -78,7 +78,7 @@ const SelectContent = React.forwardRef<
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport
         className={cn(
-          "p-1",
+          "p-1.5",
           position === "popper" &&
             "w-full min-w-[var(--radix-select-trigger-width)]",
         )}
@@ -110,12 +110,12 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-control py-1.5 pl-7 pr-2 text-sm text-ink-soft outline-none transition-colors data-[highlighted]:bg-wash data-[highlighted]:text-ink data-[disabled]:pointer-events-none data-[disabled]:text-ink-faint",
+      "relative flex w-full cursor-default select-none items-center rounded-control py-2 pl-8 pr-3 text-sm text-ink-soft outline-none transition-colors data-[highlighted]:bg-wash data-[highlighted]:text-ink data-[disabled]:pointer-events-none data-[disabled]:text-ink-faint",
       className,
     )}
     {...props}
   >
-    <span className="absolute left-2 flex size-3.5 items-center justify-center text-ink">
+    <span className="absolute left-3 flex size-3.5 items-center justify-center text-signal">
       <SelectPrimitive.ItemIndicator>
         <Check aria-hidden="true" className="size-3.5" />
       </SelectPrimitive.ItemIndicator>

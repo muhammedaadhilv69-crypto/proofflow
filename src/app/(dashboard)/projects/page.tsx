@@ -57,7 +57,7 @@ export default async function ProjectsPage() {
               <li key={project.id}>
                 <Link
                   href={`/projects/${project.id}`}
-                  className="grid grid-cols-1 items-baseline gap-x-4 gap-y-2 px-5 py-4 transition-colors hover:bg-wash sm:grid-cols-[1fr_11rem_9rem_7rem]"
+                  className="grid grid-cols-1 items-baseline gap-x-4 gap-y-2 px-6 py-4 transition-colors hover:bg-wash sm:grid-cols-[1fr_11rem_9rem_7rem]"
                 >
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-medium text-ink">
